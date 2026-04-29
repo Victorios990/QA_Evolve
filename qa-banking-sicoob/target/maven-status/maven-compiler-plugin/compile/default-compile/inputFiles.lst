@@ -1,0 +1,13 @@
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/config/ConfigManager.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/AccountActivityPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/AccountOverviewPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/BasePage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/BillPayPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/LoginPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/NavigationBar.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/OpenAccountPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/RegisterPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/TransferFundsPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/utils/DatabaseUtils.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/utils/DriverFactory.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/utils/TestDataGenerator.java

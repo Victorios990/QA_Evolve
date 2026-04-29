@@ -1,0 +1,115 @@
+-------------------------------------------------------------------------------
+Test set: com.banking.qa.runners.AllTestsRunner
+-------------------------------------------------------------------------------
+Tests run: 47, Failures: 10, Errors: 4, Skipped: 0, Time elapsed: 392.8 s <<< FAILURE! -- in com.banking.qa.runners.AllTestsRunner
+Jornada Completa do Correntista.Jornada completa — do registro ao logout -- Time elapsed: 34.70 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for visibility of element located by By.id: customer.firstName (tried for 15 second(s) with 500 milliseconds interval)
+Build info: version: '4.18.1', revision: 'b1d3319b48'
+System info: os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '15.7.3', java.version: '25.0.2'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 147.0.7727.119, chrome: {chromedriverVersion: 147.0.7727.117 (474cc805edd..., userDataDir: /var/folders/pw/z_1c8mb11pz...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:58942}, goog:processID: 36602, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:58942/devtoo..., se:cdpVersion: 147.0.7727.119, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: a5938c18ac8e1868ba9a79244079e0ed
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at com.banking.qa.pages.BasePage.waitVisible(BasePage.java:24)
+	at com.banking.qa.pages.BasePage.type(BasePage.java:36)
+	at com.banking.qa.pages.RegisterPage.fillForm(RegisterPage.java:31)
+	at com.banking.qa.steps.e2e.E2ESteps.preencheFormularioRegistro(E2ESteps.java:45)
+	at ✽.preenche o formulário com dados válidos gerados automaticamente(classpath:features/e2e/jornada_completa.feature:12)
+
+Extrato e Atividade da Conta.Visualizar extrato da conta corrente -- Time elapsed: 8.047 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Login falhou — painel de contas não carregado ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioAutenticado(TransferenciaSteps.java:33)
+	at ✽.que o usuário está autenticado com usuário "john" e senha "demo"(classpath:features/extrato.feature:9)
+
+Extrato e Atividade da Conta.Filtrar extrato por período -- Time elapsed: 34.98 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for presence of any elements located by By.cssSelector: a[href*='activity.htm'] (tried for 20 second(s) with 500 milliseconds interval)
+Build info: version: '4.18.1', revision: 'b1d3319b48'
+System info: os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '15.7.3', java.version: '25.0.2'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 147.0.7727.119, chrome: {chromedriverVersion: 147.0.7727.117 (474cc805edd..., userDataDir: /var/folders/pw/z_1c8mb11pz...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:59019}, goog:processID: 36727, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:59019/devtoo..., se:cdpVersion: 147.0.7727.119, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: fab8dae7701f1ba4aeddfeb5883d685d
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at com.banking.qa.steps.extrato.ExtratoSteps.clicaEmContaDisponivel(ExtratoSteps.java:37)
+	at ✽.o usuário clica em uma conta disponível(classpath:features/extrato.feature:21)
+
+Extrato e Atividade da Conta.Filtrar extrato por tipo de transação - Débito -- Time elapsed: 3.928 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Login falhou — painel de contas não carregado ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioAutenticado(TransferenciaSteps.java:33)
+	at ✽.que o usuário está autenticado com usuário "john" e senha "demo"(classpath:features/extrato.feature:9)
+
+Extrato e Atividade da Conta.Filtrar extrato por tipo de transação - Débito -- Time elapsed: 29.98 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for visibility of element located by By.name: username (tried for 15 second(s) with 500 milliseconds interval)
+Build info: version: '4.18.1', revision: 'b1d3319b48'
+System info: os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '15.7.3', java.version: '25.0.2'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 147.0.7727.119, chrome: {chromedriverVersion: 147.0.7727.117 (474cc805edd..., userDataDir: /var/folders/pw/z_1c8mb11pz...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:59181}, goog:processID: 36927, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:59181/devtoo..., se:cdpVersion: 147.0.7727.119, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: 41becf3d9e51215e583746c443f3a59a
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at com.banking.qa.pages.BasePage.waitVisible(BasePage.java:24)
+	at com.banking.qa.pages.LoginPage.navigate(LoginPage.java:19)
+	at com.banking.qa.pages.LoginPage.login(LoginPage.java:35)
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioAutenticado(TransferenciaSteps.java:32)
+	at ✽.que o usuário está autenticado com usuário "john" e senha "demo"(classpath:features/extrato/extrato.feature:9)
+
+Extrato e Atividade da Conta.Filtrar extrato por tipo de transação - Crédito -- Time elapsed: 7.428 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Login falhou — painel de contas não carregado ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioAutenticado(TransferenciaSteps.java:33)
+	at ✽.que o usuário está autenticado com usuário "john" e senha "demo"(classpath:features/extrato/extrato.feature:9)
+
+Exemplos.Example #1.3 -- Time elapsed: 45.81 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Mensagem de erro não foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.login.LoginSteps.sistemaMostraMensagemErro(LoginSteps.java:44)
+	at ✽.o sistema deve exibir a mensagem de erro "The username and password could not be verified."(classpath:features/login/login.feature:40)
+
+Transferência entre Contas.Transferência com saldo suficiente -- Time elapsed: 4.387 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Login falhou — painel de contas não carregado ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioAutenticado(TransferenciaSteps.java:33)
+	at ✽.que o usuário está autenticado com usuário "john" e senha "demo"(classpath:features/transferencia.feature:9)
+
+Transferência entre Contas.Transferência de valor mínimo -- Time elapsed: 19.14 s <<< ERROR!
+org.openqa.selenium.TimeoutException: 
+Expected condition failed: waiting for visibility of element located by By.id: amount (tried for 15 second(s) with 500 milliseconds interval)
+Build info: version: '4.18.1', revision: 'b1d3319b48'
+System info: os.name: 'Mac OS X', os.arch: 'x86_64', os.version: '15.7.3', java.version: '25.0.2'
+Driver info: org.openqa.selenium.chrome.ChromeDriver
+Capabilities {acceptInsecureCerts: false, browserName: chrome, browserVersion: 147.0.7727.119, chrome: {chromedriverVersion: 147.0.7727.117 (474cc805edd..., userDataDir: /var/folders/pw/z_1c8mb11pz...}, fedcm:accounts: true, goog:chromeOptions: {debuggerAddress: localhost:59667}, goog:processID: 37526, networkConnectionEnabled: false, pageLoadStrategy: normal, platformName: mac, proxy: Proxy(), se:cdp: ws://localhost:59667/devtoo..., se:cdpVersion: 147.0.7727.119, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webauthn:extension:credBlob: true, webauthn:extension:largeBlob: true, webauthn:extension:minPinLength: true, webauthn:extension:prf: true, webauthn:virtualAuthenticators: true}
+Session ID: e039f3bb5634499ffa03c2da1eb157f8
+	at org.openqa.selenium.support.ui.WebDriverWait.timeoutException(WebDriverWait.java:84)
+	at org.openqa.selenium.support.ui.FluentWait.until(FluentWait.java:228)
+	at com.banking.qa.pages.BasePage.waitVisible(BasePage.java:24)
+	at com.banking.qa.pages.BasePage.type(BasePage.java:36)
+	at com.banking.qa.pages.TransferFundsPage.enterAmount(TransferFundsPage.java:25)
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioInformaValor(TransferenciaSteps.java:44)
+	at ✽.o usuário informa o valor "0.01"(classpath:features/transferencia.feature:24)
+
+Transferência entre Contas.Tentativa de transferência com valor zerado -- Time elapsed: 33.10 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Esperava mensagem de erro, mas nenhuma foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.sistemaMostraMensagemErroTransferencia(TransferenciaSteps.java:116)
+	at ✽.o sistema deve exibir mensagem de erro(classpath:features/transferencia.feature:37)
+
+Transferência entre Contas.Tentativa de transferência sem informar valor -- Time elapsed: 12.28 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Esperava mensagem de erro, mas nenhuma foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.sistemaMostraMensagemErroTransferencia(TransferenciaSteps.java:116)
+	at ✽.o sistema deve exibir mensagem de erro(classpath:features/transferencia.feature:46)
+
+Transferência entre Contas.Transferência com saldo suficiente -- Time elapsed: 3.770 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Login falhou — painel de contas não carregado ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.usuarioAutenticado(TransferenciaSteps.java:33)
+	at ✽.que o usuário está autenticado com usuário "john" e senha "demo"(classpath:features/transferencia/transferencia.feature:9)
+
+Transferência entre Contas.Tentativa de transferência com valor zerado -- Time elapsed: 12.42 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Esperava mensagem de erro, mas nenhuma foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.sistemaMostraMensagemErroTransferencia(TransferenciaSteps.java:116)
+	at ✽.o sistema deve exibir mensagem de erro(classpath:features/transferencia/transferencia.feature:37)
+
+Transferência entre Contas.Tentativa de transferência sem informar valor -- Time elapsed: 10.70 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Esperava mensagem de erro, mas nenhuma foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.transferencia.TransferenciaSteps.sistemaMostraMensagemErroTransferencia(TransferenciaSteps.java:116)
+	at ✽.o sistema deve exibir mensagem de erro(classpath:features/transferencia/transferencia.feature:46)
+

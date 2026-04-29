@@ -1,0 +1,19 @@
+-------------------------------------------------------------------------------
+Test set: com.banking.qa.runners.TestRunner
+-------------------------------------------------------------------------------
+Tests run: 23, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 116.3 s <<< FAILURE! -- in com.banking.qa.runners.TestRunner
+Transferência entre Contas.Tentativa de transferência com valor zerado -- Time elapsed: 9.648 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Esperava mensagem de erro, mas nenhuma foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.TransferenciaSteps.sistemaMostraMensagemErroTransferencia(TransferenciaSteps.java:116)
+	at ✽.o sistema deve exibir mensagem de erro(classpath:features/transferencia.feature:37)
+
+Transferência entre Contas.Tentativa de transferência sem informar valor -- Time elapsed: 9.864 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Esperava mensagem de erro, mas nenhuma foi exibida ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.TransferenciaSteps.sistemaMostraMensagemErroTransferencia(TransferenciaSteps.java:116)
+	at ✽.o sistema deve exibir mensagem de erro(classpath:features/transferencia.feature:46)
+
+Transferência entre Contas.Validação da transferência no banco de dados -- Time elapsed: 4.801 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Tipo de transação incorreto. Esperado: Funds Transfer Sent, Obtido: Saldo inicial ==> expected: <true> but was: <false>
+	at com.banking.qa.steps.TransferenciaSteps.tipoTransacaoCorreto(TransferenciaSteps.java:140)
+	at ✽.o tipo da transação deve ser "Funds Transfer Sent"(classpath:features/transferencia.feature:56)
+

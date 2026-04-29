@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # PostgreSQL — simula o DB2 bancário (mesma sintaxe SQL)
+  postgres:
+    image: postgres:15-alpine
+    container_name: banking_db
+    environment:
+      POSTGRES_DB:       banking_db
+      POSTGRES_USER:     qa_user
+      POSTGRES_PASSWORD: qa_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qa_user -d banking_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin — interface visual para explorar o banco
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: banking_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL:    qa@banking.com
+      PGADMIN_DEFAULT_PASSWORD: qa_admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

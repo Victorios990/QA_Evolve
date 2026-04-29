@@ -1,0 +1,12 @@
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/hooks/Hooks.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/runners/AllTestsRunner.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/runners/BancoDadosRunner.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/runners/E2ERunner.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/runners/ExtratoRunner.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/runners/LoginRunner.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/runners/TransferenciaRunner.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/steps/database/DatabaseSteps.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/steps/e2e/E2ESteps.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/steps/extrato/ExtratoSteps.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/steps/login/LoginSteps.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/test/java/com/banking/qa/steps/transferencia/TransferenciaSteps.java
