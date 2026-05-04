@@ -1,6 +1,17 @@
-version: '3.8'
-
 services:
+  # Parabank — sistema bancário de treino rodando localmente
+  parabank:
+    image: parasoft/parabank:latest
+    container_name: banking_parabank
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/parabank/index.htm || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 60s
+
   # PostgreSQL — simula o DB2 bancário (mesma sintaxe SQL)
   postgres:
     image: postgres:15-alpine

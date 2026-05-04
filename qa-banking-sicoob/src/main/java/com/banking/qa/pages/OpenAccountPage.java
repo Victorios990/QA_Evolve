@@ -6,19 +6,17 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class OpenAccountPage extends BasePage {
 
-    private final By accountTypeSelect = By.id("type");
-    private final By openButton        = By.cssSelector("input[value='Open New Account']");
-    private final By successTitle      = By.cssSelector(".title");
-    private final By newAccountId      = By.id("newAccountId");
+    private final By accountTypeSelect  = By.id("type");
+    private final By openButton         = By.cssSelector("input[value='Open New Account']");
+    private final By openAccountResult  = By.id("openAccountResult");
+    private final By newAccountId       = By.id("newAccountId");
 
     public void navigate() {
         driver.get(ConfigManager.getInstance().getBaseUrl() + "/parabank/openaccount.htm");
     }
 
     public void selectAccountType(String type) {
-        int index = type.equalsIgnoreCase("SAVINGS") ? 1 : 0;
-        new org.openqa.selenium.support.ui.Select(
-            driver.findElement(accountTypeSelect)).selectByIndex(index);
+        selectByVisibleText(accountTypeSelect, type.toUpperCase());
     }
 
     public void waitForFromAccountLoaded() {
@@ -35,10 +33,8 @@ public class OpenAccountPage extends BasePage {
 
     public boolean isAccountOpened() {
         try {
-            wait.until(org.openqa.selenium.support.ui.ExpectedConditions
-                .presenceOfElementLocated(successTitle));
-            String src = driver.getPageSource();
-            return src.contains("Account Opened") || src.contains("Congratulations");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(openAccountResult));
+            return true;
         } catch (Exception e) {
             return false;
         }

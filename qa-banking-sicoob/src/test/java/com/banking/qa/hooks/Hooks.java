@@ -9,28 +9,39 @@ import io.cucumber.java.Scenario;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * Hooks para testes web. Executados em todos os cenários SEM a tag @mobile.
+ * Cenários @mobile têm seus próprios hooks em MobileHooks.
+ */
 public class Hooks {
 
-    @Before(order = 1)
+    private static final Logger log = LoggerFactory.getLogger(Hooks.class);
+
+    @Before(order = 1, value = "not @mobile")
     public void setup(Scenario scenario) {
-        System.out.println("Iniciando cenário: " + scenario.getName());
+        log.info("Iniciando cenário: {}", scenario.getName());
     }
 
-    @After(order = 1)
+    @After(order = 1, value = "not @mobile")
     public void tearDown(Scenario scenario) {
-        // Captura screenshot em falha
-        if (scenario.isFailed()) {
-            try {
-                WebDriver driver = DriverFactory.getDriver();
-                byte[] screenshot = ((TakesScreenshot) driver)
-                    .getScreenshotAs(OutputType.BYTES);
-                scenario.attach(screenshot, "image/png", "screenshot-falha");
-            } catch (Exception e) {
-                System.out.println("Erro ao capturar screenshot: " + e.getMessage());
+        // Protege contra cenários que não criaram WebDriver (ex: BancoDados usa apenas JDBC)
+        if (DriverFactory.isInitialized()) {
+            if (scenario.isFailed()) {
+                try {
+                    WebDriver driver = DriverFactory.getDriver();
+                    byte[] screenshot = ((TakesScreenshot) driver)
+                        .getScreenshotAs(OutputType.BYTES);
+                    scenario.attach(screenshot, "image/png", "screenshot-falha");
+                    log.warn("Cenário falhou: {} — screenshot capturado", scenario.getName());
+                } catch (Exception e) {
+                    log.error("Erro ao capturar screenshot: {}", e.getMessage());
+                }
             }
+            DriverFactory.quitDriver();
         }
-        DriverFactory.quitDriver();
     }
 
     @AfterAll

@@ -2,10 +2,11 @@ package com.banking.qa.pages;
 
 import com.banking.qa.config.ConfigManager;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.Select;
 
-import java.time.Duration;
+import java.util.List;
 
 public class TransferFundsPage extends BasePage {
 
@@ -13,9 +14,9 @@ public class TransferFundsPage extends BasePage {
     private final By fromAccountSelect = By.id("fromAccountId");
     private final By toAccountSelect   = By.id("toAccountId");
     private final By transferButton    = By.cssSelector("input[value='Transfer']");
-    private final By successTitle      = By.cssSelector(".title");
+    private final By showResult        = By.id("showResult");
+    private final By showError         = By.id("showError");
     private final By errorMessage      = By.cssSelector(".error");
-    private final By transferedAmount  = By.id("amount");
 
     public void navigate() {
         driver.get(ConfigManager.getInstance().getBaseUrl() + "/parabank/transfer.htm");
@@ -37,6 +38,41 @@ public class TransferFundsPage extends BasePage {
         click(transferButton);
     }
 
+    /** Aguarda o Parabank carregar as contas via AJAX antes de interagir com os selects. */
+    public void waitForFromAccountOptions() {
+        wait.until(d -> {
+            List<WebElement> opts = d.findElements(By.cssSelector("#fromAccountId option"));
+            return opts.size() > 0 ? opts : null;
+        });
+    }
+
+    /**
+     * Seleciona a conta de origem com maior saldo (último item da lista).
+     * O Parabank ordena contas por ID crescente; a última tem o maior saldo nos dados padrão.
+     */
+    public String selectFirstFromAccount() {
+        waitForFromAccountOptions();
+        List<WebElement> opts = driver.findElements(By.cssSelector("#fromAccountId option"));
+        int lastIdx = opts.size() - 1;
+        Select select = new Select(driver.findElement(fromAccountSelect));
+        select.selectByIndex(lastIdx);
+        return opts.get(lastIdx).getAttribute("value");
+    }
+
+    /**
+     * Seleciona a primeira conta como destino (diferente da última que foi usada como origem).
+     * Aguarda o AJAX popular o select antes de interagir.
+     */
+    public String selectLastToAccount() {
+        wait.until(d -> {
+            List<WebElement> opts = d.findElements(By.cssSelector("#toAccountId option"));
+            return opts.size() > 0 ? opts : null;
+        });
+        Select select = new Select(driver.findElement(toAccountSelect));
+        select.selectByIndex(0);
+        return select.getFirstSelectedOption().getAttribute("value");
+    }
+
     public void transferFunds(String amount, String fromAccount, String toAccount) {
         enterAmount(amount);
         selectFromAccount(fromAccount);
@@ -45,27 +81,20 @@ public class TransferFundsPage extends BasePage {
     }
 
     public boolean isTransferSuccessful() {
-        // Parabank usa AJAX — aguardar resultado
         try {
-            WebDriverWait w = new WebDriverWait(driver, Duration.ofSeconds(15));
-            // Pode retornar no div#showResult ou no .title
-            w.until(ExpectedConditions.or(
-                ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".title")),
-                ExpectedConditions.visibilityOfElementLocated(By.id("showResult"))
-            ));
-        } catch (Exception ignored) {}
-        String pageSource = driver.getPageSource();
-        return pageSource.contains("Transfer Complete") || pageSource.contains("transfer complete");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(showResult));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isErrorDisplayed() {
         try {
-            new WebDriverWait(driver, Duration.ofSeconds(5))
-                .until(ExpectedConditions.visibilityOfElementLocated(errorMessage));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(showError));
             return true;
         } catch (Exception e) {
-            // Parabank pode não mostrar erro — verificar se resultado de sucesso também não apareceu
-            return !driver.getPageSource().contains("Transfer Complete");
+            return isDisplayed(errorMessage);
         }
     }
 

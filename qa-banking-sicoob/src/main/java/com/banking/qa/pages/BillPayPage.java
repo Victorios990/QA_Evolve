@@ -6,17 +6,17 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class BillPayPage extends BasePage {
 
-    private final By payeeNameField    = By.name("payee.name");
-    private final By addressField      = By.name("payee.address.street");
-    private final By cityField         = By.name("payee.address.city");
-    private final By stateField        = By.name("payee.address.state");
-    private final By zipCodeField      = By.name("payee.address.zipCode");
-    private final By phoneField        = By.name("payee.phoneNumber");
-    private final By accountField      = By.name("payee.accountNumber");
-    private final By verifyAccountField= By.name("verifyAccount");
-    private final By amountField       = By.name("amount");
-    private final By sendButton        = By.cssSelector("input[value='Send Payment']");
-    private final By successTitle      = By.cssSelector(".title");
+    private final By payeeNameField     = By.name("payee.name");
+    private final By addressField       = By.name("payee.address.street");
+    private final By cityField          = By.name("payee.address.city");
+    private final By stateField         = By.name("payee.address.state");
+    private final By zipCodeField       = By.name("payee.address.zipCode");
+    private final By phoneField         = By.name("payee.phoneNumber");
+    private final By accountField       = By.name("payee.accountNumber");
+    private final By verifyAccountField = By.name("verifyAccount");
+    private final By amountField        = By.name("amount");
+    private final By sendButton         = By.cssSelector("input[value='Send Payment']");
+    private final By billpayResult      = By.id("billpayResult");
 
     public void navigate() {
         driver.get(ConfigManager.getInstance().getBaseUrl() + "/parabank/billpay.htm");
@@ -50,10 +50,10 @@ public class BillPayPage extends BasePage {
 
     public boolean isPaymentSuccessful() {
         try {
-            wait.until(org.openqa.selenium.support.ui.ExpectedConditions
-                .presenceOfElementLocated(successTitle));
-        } catch (Exception ignored) {}
-        String src = driver.getPageSource();
-        return src.contains("Bill Payment Complete") || src.contains("payment was successfully");
+            wait.until(ExpectedConditions.visibilityOfElementLocated(billpayResult));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

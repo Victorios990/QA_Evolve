@@ -2,6 +2,8 @@ package com.banking.qa.steps.database;
 
 import com.banking.qa.utils.DatabaseUtils;
 import io.cucumber.java.pt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -11,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class DatabaseSteps {
 
+    private static final Logger log = LoggerFactory.getLogger(DatabaseSteps.class);
+
     @Dado("que o banco de dados está disponível")
     public void bancoDadosDisponivel() throws SQLException {
         assertNotNull(DatabaseUtils.getConnection(),
@@ -19,7 +23,6 @@ public class DatabaseSteps {
 
     @Quando("executo a query de validação de integridade referencial de contas")
     public void executaQueryIntegridadeContas() throws SQLException {
-        // Contas sem cliente associado
         String sql = """
             SELECT COUNT(*) as total
             FROM account a
@@ -33,8 +36,7 @@ public class DatabaseSteps {
 
     @Então("não deve existir conta sem cliente associado")
     public void naoDeveExistirContaSemCliente() {
-        // validação já feita no passo anterior
-        System.out.println("Integridade referencial conta-cliente: OK");
+        log.info("Integridade referencial conta-cliente: OK");
     }
 
     @Quando("executo a query de verificação de saldo negativo")
@@ -52,7 +54,7 @@ public class DatabaseSteps {
 
     @Então("não deve existir conta com saldo negativo sem ser conta especial")
     public void naoDeveExistirSaldoNegativoIndevido() {
-        System.out.println("Validação de saldo negativo: OK");
+        log.info("Validação de saldo negativo: OK");
     }
 
     @Quando("executo a query de consistência de transações")
@@ -70,7 +72,7 @@ public class DatabaseSteps {
 
     @Então("toda transação deve ter conta de origem válida")
     public void transacoesDevemTerContaValida() {
-        System.out.println("Consistência de transações: OK");
+        log.info("Consistência de transações: OK");
     }
 
     @Quando("executo a contagem de clientes ativos")
@@ -83,7 +85,7 @@ public class DatabaseSteps {
 
     @Então("o resultado deve ser maior que zero")
     public void resultadoMaiorQueZero() {
-        System.out.println("Clientes ativos: OK");
+        log.info("Clientes ativos: OK");
     }
 
     @Quando("executo a query de verificação de duplicidade de CPF")
@@ -102,7 +104,7 @@ public class DatabaseSteps {
 
     @Então("não deve existir CPF duplicado na base de clientes")
     public void naoDeveExistirCPFDuplicado() {
-        System.out.println("Unicidade de CPF: OK");
+        log.info("Unicidade de CPF: OK");
     }
 
     @Quando("executo a query de auditoria de transações")
@@ -120,6 +122,6 @@ public class DatabaseSteps {
 
     @Então("toda transação deve ter registro de auditoria correspondente")
     public void transacoesDevemTerAuditoria() {
-        System.out.println("Auditoria de transações: OK");
+        log.info("Auditoria de transações: OK");
     }
 }

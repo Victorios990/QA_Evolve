@@ -1,8 +1,11 @@
+com/banking/qa/pages/BillPayPage.class
 com/banking/qa/pages/BasePage.class
 com/banking/qa/pages/AccountActivityPage.class
 com/banking/qa/pages/AccountOverviewPage.class
 com/banking/qa/pages/LoginPage.class
 com/banking/qa/config/ConfigManager.class
-com/banking/qa/utils/DriverFactory.class
+com/banking/qa/pages/RegisterPage.class
 com/banking/qa/utils/DatabaseUtils.class
 com/banking/qa/pages/TransferFundsPage.class
+com/banking/qa/pages/OpenAccountPage.class
+com/banking/qa/pages/NavigationBar.class

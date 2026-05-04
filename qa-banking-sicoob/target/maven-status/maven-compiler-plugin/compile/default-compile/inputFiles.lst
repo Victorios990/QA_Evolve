@@ -1,4 +1,8 @@
 /Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/config/ConfigManager.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/mobile/driver/MobileDriverFactory.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/mobile/pages/MobileBasePage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/mobile/pages/MobileLoginPage.java
+/Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/mobile/pages/MobileProductsPage.java
 /Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/AccountActivityPage.java
 /Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/AccountOverviewPage.java
 /Users/victor/Documents/WorkSpaces/QA_Evolve/qa-banking-sicoob/src/main/java/com/banking/qa/pages/BasePage.java
