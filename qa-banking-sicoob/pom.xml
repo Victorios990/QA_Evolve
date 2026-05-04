@@ -24,6 +24,7 @@
         <postgresql.version>42.7.3</postgresql.version>
         <webdrivermanager.version>5.7.0</webdrivermanager.version>
         <faker.version>1.0.2</faker.version>
+        <appium.version>9.2.3</appium.version>
     </properties>
 
     <dependencies>
@@ -90,6 +91,20 @@
         </dependency>
         -->
 
+        <!-- Appium Java Client (mobile — Android/iOS) -->
+        <dependency>
+            <groupId>io.appium</groupId>
+            <artifactId>java-client</artifactId>
+            <version>${appium.version}</version>
+            <exclusions>
+                <!-- Evita conflito com a versão de Selenium que já gerenciamos -->
+                <exclusion>
+                    <groupId>org.seleniumhq.selenium</groupId>
+                    <artifactId>selenium-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Java Faker para dados de teste -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
@@ -111,6 +126,29 @@
             <version>2.17.0</version>
         </dependency>
     </dependencies>
+
+    <!-- Força todos os módulos Selenium ao mesmo release declarado em ${selenium.version}.
+         Sem isso, Appium puxa selenium-api/remote-driver/support em versões mais recentes
+         que removeram WebStorage e outros artefatos presentes em 4.18.x -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-api</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-remote-driver</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-support</artifactId>
+                <version>${selenium.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

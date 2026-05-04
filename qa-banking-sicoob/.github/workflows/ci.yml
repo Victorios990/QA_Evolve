@@ -23,14 +23,18 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      parabank:
+        image: parasoft/parabank:latest
+        ports:
+          - 8080:8080
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java 11
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
@@ -40,6 +44,19 @@ jobs:
           psql -h localhost -U qa_user -d banking_db -f database/seed.sql
         env:
           PGPASSWORD: qa_password
+
+      - name: Aguardar Parabank inicializar
+        run: |
+          echo "Aguardando Parabank ficar disponível..."
+          for i in $(seq 1 24); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/parabank/index.htm)
+            if [ "$STATUS" = "200" ]; then
+              echo "Parabank pronto (tentativa $i)"
+              break
+            fi
+            echo "Tentativa $i/24 — status $STATUS, aguardando 10s..."
+            sleep 10
+          done
 
       - name: Executar Smoke Tests
         run: mvn test -Dcucumber.filter.tags="@smoke" -Dheadless=true
@@ -77,14 +94,43 @@ jobs:
           POSTGRES_PASSWORD: qa_password
         ports:
           - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      parabank:
+        image: parasoft/parabank:latest
+        ports:
+          - 8080:8080
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
+      - name: Inicializar banco de dados
+        run: |
+          psql -h localhost -U qa_user -d banking_db -f database/schema.sql
+          psql -h localhost -U qa_user -d banking_db -f database/seed.sql
+        env:
+          PGPASSWORD: qa_password
+
+      - name: Aguardar Parabank inicializar
+        run: |
+          echo "Aguardando Parabank ficar disponível..."
+          for i in $(seq 1 24); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/parabank/index.htm)
+            if [ "$STATUS" = "200" ]; then
+              echo "Parabank pronto (tentativa $i)"
+              break
+            fi
+            echo "Tentativa $i/24 — status $STATUS, aguardando 10s..."
+            sleep 10
+          done
+
       - name: Executar Regressão
         run: mvn test -Dcucumber.filter.tags="@regressao" -Dheadless=true
+        env:
+          DB_URL: jdbc:postgresql://localhost:5432/banking_db

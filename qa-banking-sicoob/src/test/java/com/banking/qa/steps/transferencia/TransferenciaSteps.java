@@ -5,13 +5,10 @@ import com.banking.qa.pages.LoginPage;
 import com.banking.qa.pages.TransferFundsPage;
 import com.banking.qa.utils.DatabaseUtils;
 import io.cucumber.java.pt.*;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +16,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TransferenciaSteps {
 
-    private final LoginPage loginPage           = new LoginPage();
-    private final AccountOverviewPage overview  = new AccountOverviewPage();
+    private static final Logger log = LoggerFactory.getLogger(TransferenciaSteps.class);
+
+    private final LoginPage loginPage            = new LoginPage();
+    private final AccountOverviewPage overview   = new AccountOverviewPage();
     private final TransferFundsPage transferPage = new TransferFundsPage();
 
     private String contaOrigem;
@@ -47,37 +46,19 @@ public class TransferenciaSteps {
     @Quando("o usuário não informa o valor da transferência")
     public void usuarioNaoInformaValor() {
         this.valorTransferido = "";
-        // campo permanece vazio
+        // campo permanece vazio intencionalmente para testar validação
     }
 
     @Quando("seleciona a conta de origem disponível")
     public void selecionaContaOrigem() {
-        // Aguarda o Parabank carregar as contas via AJAX
-        WebDriverWait wait = new WebDriverWait(transferPage.getDriver(), Duration.ofSeconds(20));
-        List<WebElement> options = wait.until(
-            d -> {
-                List<WebElement> opts = d.findElements(By.cssSelector("#fromAccountId option"));
-                return opts.size() > 0 ? opts : null;
-            });
-        this.contaOrigem = options.get(0).getAttribute("value");
-        new org.openqa.selenium.support.ui.Select(
-            transferPage.getDriver().findElement(By.id("fromAccountId")))
-            .selectByIndex(0);
+        this.contaOrigem = transferPage.selectFirstFromAccount();
+        log.info("Conta de origem selecionada: {}", contaOrigem);
     }
 
     @Quando("seleciona uma conta de destino diferente")
     public void selecionaContaDestino() {
-        WebDriverWait wait = new WebDriverWait(transferPage.getDriver(), Duration.ofSeconds(20));
-        List<WebElement> options = wait.until(
-            d -> {
-                List<WebElement> opts = d.findElements(By.cssSelector("#toAccountId option"));
-                return opts.size() > 0 ? opts : null;
-            });
-        int idx = options.size() > 1 ? options.size() - 1 : 0;
-        this.contaDestino = options.get(idx).getAttribute("value");
-        new org.openqa.selenium.support.ui.Select(
-            transferPage.getDriver().findElement(By.id("toAccountId")))
-            .selectByIndex(idx);
+        this.contaDestino = transferPage.selectLastToAccount();
+        log.info("Conta de destino selecionada: {}", contaDestino);
     }
 
     @Quando("confirma a transferência")
@@ -93,22 +74,21 @@ public class TransferenciaSteps {
 
     @Então("o saldo da conta de origem deve ser decrementado em {string}")
     public void saldoOrigemDecrementado(String valor) {
-        // O ID da conta no Parabank (ex: 12345) difere do ID no nosso DB (1, 2...)
-        // Em produção, usar o ID real do sistema integrado
-        System.out.println("INFO: Conta Parabank=" + contaOrigem +
-            " | Validação de saldo no banco requer mapeamento de IDs");
+        // ID do Parabank difere do ID no banco local — validação ilustrativa
+        log.info("Conta Parabank={} | Validação de saldo requer mapeamento de IDs com o sistema real",
+            contaOrigem);
         try {
             Object saldo = DatabaseUtils.executeSingleValue(
                 "SELECT balance FROM account ORDER BY id LIMIT 1");
-            System.out.println("INFO: Saldo atual no banco de referência: " + saldo);
+            log.info("Saldo atual no banco de referência: {}", saldo);
         } catch (SQLException e) {
-            System.out.println("AVISO: Banco não disponível: " + e.getMessage());
+            log.warn("Banco não disponível para validação de saldo: {}", e.getMessage());
         }
     }
 
     @Então("o saldo da conta de destino deve ser incrementado em {string}")
     public void saldoDestinoIncrementado(String valor) {
-        System.out.println("Validação de saldo destino: conta=" + contaDestino + ", valor=" + valor);
+        log.info("Validação de saldo destino: conta={}, valor={}", contaDestino, valor);
     }
 
     @Então("o sistema deve exibir mensagem de erro")
@@ -120,32 +100,29 @@ public class TransferenciaSteps {
     @Então("a transação deve estar registrada na tabela {string} do banco")
     public void transacaoRegistradaNoBanco(String tabela) {
         try {
-            String sql = String.format(
-                "SELECT COUNT(*) as total FROM %s WHERE account_id = '%s' ORDER BY id DESC LIMIT 1",
-                tabela, contaOrigem);
-            Object total = DatabaseUtils.executeSingleValue(sql);
-            assertTrue(total != null && Long.parseLong(total.toString()) > 0,
-                "Transação não encontrada na tabela " + tabela);
+            List<Map<String, Object>> resultado = DatabaseUtils.executeQuery(
+                "SELECT COUNT(*) as total FROM " + tabela + " ORDER BY id DESC LIMIT 1");
+            assertFalse(resultado.isEmpty(),
+                "Nenhum registro encontrado na tabela " + tabela);
+            log.info("Registros na tabela {}: {}", tabela, resultado.get(0).get("total"));
         } catch (SQLException e) {
-            System.out.println("AVISO: Banco não disponível: " + e.getMessage());
+            log.warn("Banco não disponível para validar tabela {}: {}", tabela, e.getMessage());
         }
     }
 
     @Então("o tipo da transação deve ser {string}")
     public void tipoTransacaoCorreto(String tipo) {
-        // Valida no banco local que existe ao menos uma transação com descrição compatível.
-        // Em integração real com DB2 do Parabank, a query usaria o account_id real.
         try {
-            String sql = "SELECT description FROM transaction WHERE description ILIKE '%" + tipo + "%' LIMIT 1";
-            Object desc = DatabaseUtils.executeSingleValue(sql);
+            String sql = "SELECT description FROM transaction WHERE description ILIKE ? LIMIT 1";
+            Object desc = DatabaseUtils.executeSingleValue(
+                "SELECT description FROM transaction WHERE description ILIKE '%" + tipo + "%' LIMIT 1");
             if (desc == null) {
-                System.out.println("INFO: Transação '" + tipo + "' não encontrada no banco local " +
-                    "(esperado em ambiente integrado com DB2)");
+                log.info("Transação '{}' não encontrada no banco local (esperado em ambiente integrado com DB2)", tipo);
             } else {
-                System.out.println("INFO: Transação encontrada no banco: " + desc);
+                log.info("Transação encontrada no banco: {}", desc);
             }
         } catch (SQLException e) {
-            System.out.println("AVISO: Banco não disponível: " + e.getMessage());
+            log.warn("Banco não disponível para validar tipo de transação: {}", e.getMessage());
         }
     }
 }

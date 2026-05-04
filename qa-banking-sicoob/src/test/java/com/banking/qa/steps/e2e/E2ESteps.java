@@ -7,8 +7,9 @@ import io.cucumber.java.pt.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
@@ -17,15 +18,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class E2ESteps {
 
-    private final RegisterPage       registerPage  = new RegisterPage();
-    private final AccountOverviewPage overviewPage = new AccountOverviewPage();
-    private final OpenAccountPage    openAccPage   = new OpenAccountPage();
-    private final TransferFundsPage  transferPage  = new TransferFundsPage();
-    private final AccountActivityPage activityPage = new AccountActivityPage();
-    private final BillPayPage        billPayPage   = new BillPayPage();
-    private final NavigationBar      nav           = new NavigationBar();
+    private static final Logger log = LoggerFactory.getLogger(E2ESteps.class);
 
-    // Dados gerados dinamicamente para o novo usuário
+    private final RegisterPage        registerPage  = new RegisterPage();
+    private final AccountOverviewPage overviewPage  = new AccountOverviewPage();
+    private final OpenAccountPage     openAccPage   = new OpenAccountPage();
+    private final TransferFundsPage   transferPage  = new TransferFundsPage();
+    private final AccountActivityPage activityPage  = new AccountActivityPage();
+    private final BillPayPage         billPayPage   = new BillPayPage();
+    private final NavigationBar       nav           = new NavigationBar();
+
     private String username;
     private String password;
     private String newAccountId;
@@ -54,7 +56,7 @@ public class E2ESteps {
             username,
             password
         );
-        System.out.println("Usuário criado: " + username);
+        log.info("Usuário criado: {}", username);
     }
 
     @Quando("submete o formulário de registro")
@@ -88,7 +90,7 @@ public class E2ESteps {
             ExpectedConditions.presenceOfAllElementsLocatedBy(
                 By.cssSelector("a[href*='activity.htm']")));
         assertFalse(contas.isEmpty(), "Nenhuma conta encontrada no painel");
-        System.out.println("Contas encontradas: " + contas.size());
+        log.info("Contas encontradas no painel: {}", contas.size());
     }
 
     // ── ETAPA 3: Abertura de conta ─────────────────────────────────
@@ -108,7 +110,7 @@ public class E2ESteps {
     public void numeroNovaContaExibido() {
         newAccountId = openAccPage.getNewAccountId();
         assertFalse(newAccountId.isEmpty(), "Número da nova conta não foi exibido");
-        System.out.println("Nova conta criada: " + newAccountId);
+        log.info("Nova conta criada: {}", newAccountId);
     }
 
     // ── ETAPA 4: Transferência ─────────────────────────────────────
@@ -116,28 +118,10 @@ public class E2ESteps {
     @Quando("realiza uma transferência de {string} entre as contas disponíveis")
     public void realizaTransferencia(String valor) {
         transferPage.navigate();
-
-        WebDriverWait wait = new WebDriverWait(transferPage.getDriver(), Duration.ofSeconds(20));
-
-        // Aguarda opções de origem carregarem (AJAX)
-        wait.until(d -> {
-            List<WebElement> opts = d.findElements(By.cssSelector("#fromAccountId option"));
-            return opts.size() > 0 ? opts : null;
-        });
-
+        transferPage.waitForFromAccountOptions();
         transferPage.enterAmount(valor);
-
-        // Seleciona origem: índice 0
-        new Select(transferPage.getDriver().findElement(By.id("fromAccountId")))
-            .selectByIndex(0);
-
-        // Seleciona destino: índice diferente (último disponível)
-        List<WebElement> toOpts = transferPage.getDriver()
-            .findElements(By.cssSelector("#toAccountId option"));
-        int idx = toOpts.size() > 1 ? toOpts.size() - 1 : 0;
-        new Select(transferPage.getDriver().findElement(By.id("toAccountId")))
-            .selectByIndex(idx);
-
+        transferPage.selectFirstFromAccount();
+        transferPage.selectLastToAccount();
         transferPage.clickTransfer();
     }
 
@@ -153,7 +137,6 @@ public class E2ESteps {
     public void consultaExtrato() {
         overviewPage.getDriver().get(
             ConfigManager.getInstance().getBaseUrl() + "/parabank/overview.htm");
-
         WebDriverWait wait = new WebDriverWait(overviewPage.getDriver(), Duration.ofSeconds(15));
         List<WebElement> links = wait.until(
             ExpectedConditions.presenceOfAllElementsLocatedBy(
@@ -165,7 +148,7 @@ public class E2ESteps {
     public void extratoExibido() {
         assertTrue(activityPage.isPageLoaded(),
             "Página de extrato não foi carregada");
-        System.out.println("Saldo na conta: " + activityPage.getBalance());
+        log.info("Saldo na conta: {}", activityPage.getBalance());
     }
 
     // ── ETAPA 6: Pagamento de boleto ───────────────────────────────
@@ -174,8 +157,6 @@ public class E2ESteps {
     public void realizaPagamentoBoleto(String valor) {
         billPayPage.navigate();
         billPayPage.waitForFromAccount();
-
-        // Dados do beneficiário (qualquer empresa fictícia)
         billPayPage.fillPayeeInfo(
             "Concessionária Energia S.A.",
             "Av. Brasília, 100",
@@ -204,7 +185,6 @@ public class E2ESteps {
 
     @Então("deve ser redirecionado para a página de login")
     public void redirecionadoPaginaLogin() {
-        // Após logout, o link "Log Out" não deve mais estar visível
         assertFalse(nav.isLoggedIn(), "Sessão ainda ativa após logout");
     }
 
@@ -212,7 +192,6 @@ public class E2ESteps {
     public void semAcessoPaginasProtegidas() {
         nav.getDriver().get(
             ConfigManager.getInstance().getBaseUrl() + "/parabank/overview.htm");
-        // Sem sessão ativa, o link de logout não aparece — usuário está deslogado
         assertFalse(nav.isLoggedIn(),
             "Usuário ainda tem acesso à página protegida após logout");
     }

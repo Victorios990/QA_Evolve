@@ -1,0 +1,12 @@
+com/banking/qa/steps/database/DatabaseSteps.class
+com/banking/qa/runners/ExtratoRunner.class
+com/banking/qa/steps/transferencia/TransferenciaSteps.class
+com/banking/qa/steps/extrato/ExtratoSteps.class
+com/banking/qa/runners/AllTestsRunner.class
+com/banking/qa/steps/login/LoginSteps.class
+com/banking/qa/runners/E2ERunner.class
+com/banking/qa/steps/e2e/E2ESteps.class
+com/banking/qa/hooks/Hooks.class
+com/banking/qa/runners/TransferenciaRunner.class
+com/banking/qa/runners/BancoDadosRunner.class
+com/banking/qa/runners/LoginRunner.class

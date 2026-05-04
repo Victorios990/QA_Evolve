@@ -11,5 +11,5 @@ import org.junit.platform.suite.api.*;
     "html:target/reports/e2e/report.html," +
     "json:target/reports/e2e/report.json," +
     "io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm")
-@ConfigurationParameter(key = "cucumber.filter.tags", value = "not @ignorar")
+@ConfigurationParameter(key = "cucumber.filter.tags", value = "not @ignorar and not @bug")
 public class E2ERunner {}

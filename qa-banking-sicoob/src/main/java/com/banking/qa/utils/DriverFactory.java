@@ -40,6 +40,10 @@ public class DriverFactory {
         };
     }
 
+    public static boolean isInitialized() {
+        return driverThread.get() != null;
+    }
+
     public static void quitDriver() {
         WebDriver driver = driverThread.get();
         if (driver != null) {
