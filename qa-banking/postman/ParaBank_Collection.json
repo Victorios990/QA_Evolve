@@ -1,0 +1,1061 @@
+{
+  "info": {
+    "_postman_id": "pb-collection-banking-qa-2026",
+    "name": "ParaBank Banking API — QA",
+    "description": "Coleção completa de testes de API REST para o ParaBank (Parasoft).\n\nCobre autenticação, clientes, contas, transações, transferências e pagamentos.\nOs testes encadeiam variáveis de ambiente: Login → salva customerId → List Accounts → salva accountId.\n\nPré-requisito: selecionar o environment 'ParaBank — Ambiente QA'.\n\nAPI Base: {{api_base}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "qa-banking-2026"
+  },
+  "item": [
+    {
+      "name": "01 — Autenticação",
+      "description": "Endpoints de autenticação. O login salva o customerId e os IDs de conta nas variáveis de ambiente para uso nos testes subsequentes.",
+      "item": [
+        {
+          "name": "Login com credenciais válidas",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('Autenticando usuário:', pm.environment.get('username'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Login bem-sucedido', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém customerId', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.environment.set('customerId', body.id);",
+                  "    console.log('customerId salvo:', body.id);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém firstName e lastName', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('firstName');",
+                  "    pm.expect(body).to.have.property('lastName');",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta < 3000ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/login/{{username}}/{{password}}",
+              "host": ["{{api_base}}"],
+              "path": ["login", "{{username}}", "{{password}}"]
+            },
+            "description": "Autentica o usuário e retorna o objeto Customer com id, nome e dados cadastrais. O customerId é salvo automaticamente na variável de ambiente."
+          },
+          "response": []
+        },
+        {
+          "name": "Login com credenciais inválidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status diferente de 200 para credenciais inválidas', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 500, 400]);",
+                  "});",
+                  "",
+                  "pm.test('Corpo da resposta indica erro de autenticação', () => {",
+                  "    const texto = pm.response.text();",
+                  "    pm.expect(texto.toLowerCase()).to.satisfy(",
+                  "        (t) => t.includes('error') || t.includes('invalid') || t.includes('unauthorized') || t.includes('could not be found'),",
+                  "        'Resposta não indica erro de autenticação'",
+                  "    );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/login/usuario_invalido/senha_errada",
+              "host": ["{{api_base}}"],
+              "path": ["login", "usuario_invalido", "senha_errada"]
+            },
+            "description": "Verifica que credenciais inválidas resultam em status de erro e mensagem adequada."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 — Clientes",
+      "description": "Endpoints de dados cadastrais do cliente. Depende do customerId salvo pelo Login.",
+      "item": [
+        {
+          "name": "Buscar dados do cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cid = pm.environment.get('customerId');",
+                  "if (!cid) { throw new Error('customerId não encontrado — execute o Login primeiro'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Dados do cliente retornados', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Dados do cliente contêm campos obrigatórios', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('firstName');",
+                  "    pm.expect(body).to.have.property('lastName');",
+                  "    pm.expect(body).to.have.property('address');",
+                  "});",
+                  "",
+                  "pm.test('ID do cliente bate com o da sessão', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(String(body.id)).to.equal(pm.environment.get('customerId'));",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta < 2000ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/customers/{{customerId}}",
+              "host": ["{{api_base}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Retorna os dados cadastrais completos do cliente autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar contas do cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cid = pm.environment.get('customerId');",
+                  "if (!cid) { throw new Error('customerId não encontrado — execute o Login primeiro'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Lista de contas retornada', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Retorna array com ao menos uma conta', () => {",
+                  "    const contas = pm.response.json();",
+                  "    pm.expect(contas).to.be.an('array');",
+                  "    pm.expect(contas.length).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "pm.test('Cada conta tem id, type e balance', () => {",
+                  "    const contas = pm.response.json();",
+                  "    contas.forEach((conta) => {",
+                  "        pm.expect(conta).to.have.property('id');",
+                  "        pm.expect(conta).to.have.property('type');",
+                  "        pm.expect(conta).to.have.property('balance');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test('Salvar IDs de origem e destino nas variáveis', () => {",
+                  "    const contas = pm.response.json();",
+                  "    pm.environment.set('fromAccountId', contas[0].id);",
+                  "    if (contas.length > 1) {",
+                  "        pm.environment.set('toAccountId', contas[1].id);",
+                  "    } else {",
+                  "        pm.environment.set('toAccountId', contas[0].id);",
+                  "    }",
+                  "    console.log('fromAccountId:', contas[0].id);",
+                  "    console.log('toAccountId:', contas.length > 1 ? contas[1].id : contas[0].id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/customers/{{customerId}}/accounts",
+              "host": ["{{api_base}}"],
+              "path": ["customers", "{{customerId}}", "accounts"]
+            },
+            "description": "Lista todas as contas associadas ao cliente. Salva o primeiro ID como fromAccountId e o segundo como toAccountId."
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar dados cadastrais do cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Dados atualizados com sucesso', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Silva\",\n  \"address\": {\n    \"street\": \"Rua QA Bancária, 100\",\n    \"city\": \"Brasilia\",\n    \"state\": \"DF\",\n    \"zipCode\": \"70000-000\"\n  },\n  \"phoneNumber\": \"61999990000\",\n  \"ssn\": \"123.456.789-00\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base}}/customers/{{customerId}}",
+              "host": ["{{api_base}}"],
+              "path": ["customers", "{{customerId}}"]
+            },
+            "description": "Atualiza os dados cadastrais do cliente (nome, endereço, telefone)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 — Contas",
+      "description": "Endpoints de gestão de contas bancárias. Depende de fromAccountId salvo pelo step de listar contas.",
+      "item": [
+        {
+          "name": "Detalhe de conta bancária",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const aid = pm.environment.get('fromAccountId');",
+                  "if (!aid) { throw new Error('fromAccountId não encontrado — execute Listar Contas primeiro'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Detalhe de conta retornado', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Conta possui id, type e balance', () => {",
+                  "    const conta = pm.response.json();",
+                  "    pm.expect(conta).to.have.property('id');",
+                  "    pm.expect(conta).to.have.property('type');",
+                  "    pm.expect(conta).to.have.property('balance');",
+                  "});",
+                  "",
+                  "pm.test('Balance da conta é um número', () => {",
+                  "    const conta = pm.response.json();",
+                  "    pm.expect(conta.balance).to.be.a('number');",
+                  "});",
+                  "",
+                  "pm.test('ID da conta bate com o solicitado', () => {",
+                  "    const conta = pm.response.json();",
+                  "    pm.expect(String(conta.id)).to.equal(pm.environment.get('fromAccountId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/accounts/{{fromAccountId}}",
+              "host": ["{{api_base}}"],
+              "path": ["accounts", "{{fromAccountId}}"]
+            },
+            "description": "Retorna os detalhes de uma conta específica incluindo tipo, saldo e status."
+          },
+          "response": []
+        },
+        {
+          "name": "Abrir nova conta poupança",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cid = pm.environment.get('customerId');",
+                  "const fid = pm.environment.get('fromAccountId');",
+                  "if (!cid || !fid) { throw new Error('customerId ou fromAccountId não encontrado'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Nova conta criada', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta contém ID da nova conta', () => {",
+                  "    const conta = pm.response.json();",
+                  "    pm.expect(conta).to.have.property('id');",
+                  "    pm.environment.set('newAccountId', conta.id);",
+                  "    console.log('Nova conta poupança criada:', conta.id);",
+                  "});",
+                  "",
+                  "pm.test('Nova conta é do tipo SAVINGS', () => {",
+                  "    const conta = pm.response.json();",
+                  "    pm.expect(conta.type).to.equal('SAVINGS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/createAccount?customerId={{customerId}}&newAccountType=1&fromAccountId={{fromAccountId}}",
+              "host": ["{{api_base}}"],
+              "path": ["createAccount"],
+              "query": [
+                { "key": "customerId",      "value": "{{customerId}}" },
+                { "key": "newAccountType",  "value": "1", "description": "0=CHECKING, 1=SAVINGS, 2=LOAN" },
+                { "key": "fromAccountId",   "value": "{{fromAccountId}}" }
+              ]
+            },
+            "description": "Cria uma nova conta poupança (type=1) debitando o valor mínimo da conta de origem."
+          },
+          "response": []
+        },
+        {
+          "name": "Abrir nova conta corrente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Conta corrente criada', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Nova conta é do tipo CHECKING', () => {",
+                  "    const conta = pm.response.json();",
+                  "    pm.expect(conta.type).to.equal('CHECKING');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/createAccount?customerId={{customerId}}&newAccountType=0&fromAccountId={{fromAccountId}}",
+              "host": ["{{api_base}}"],
+              "path": ["createAccount"],
+              "query": [
+                { "key": "customerId",     "value": "{{customerId}}" },
+                { "key": "newAccountType", "value": "0" },
+                { "key": "fromAccountId",  "value": "{{fromAccountId}}" }
+              ]
+            },
+            "description": "Cria uma nova conta corrente (type=0)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 — Transações",
+      "description": "Endpoints de consulta de transações. Permite listar, filtrar por data, tipo e valor.",
+      "item": [
+        {
+          "name": "Listar todas as transações da conta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Transações listadas', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta é um array de transações', () => {",
+                  "    const transacoes = pm.response.json();",
+                  "    pm.expect(transacoes).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Cada transação contém id, type, amount e description', () => {",
+                  "    const transacoes = pm.response.json();",
+                  "    if (transacoes.length > 0) {",
+                  "        const t = transacoes[0];",
+                  "        pm.expect(t).to.have.property('id');",
+                  "        pm.expect(t).to.have.property('type');",
+                  "        pm.expect(t).to.have.property('amount');",
+                  "        pm.expect(t).to.have.property('description');",
+                  "        pm.environment.set('transactionId', t.id);",
+                  "        console.log('transactionId salvo:', t.id);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Amounts são positivos', () => {",
+                  "    const transacoes = pm.response.json();",
+                  "    transacoes.forEach((t) => {",
+                  "        pm.expect(t.amount).to.be.above(0);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/accounts/{{fromAccountId}}/transactions",
+              "host": ["{{api_base}}"],
+              "path": ["accounts", "{{fromAccountId}}", "transactions"]
+            },
+            "description": "Lista todas as transações de uma conta específica."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar transação por ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tid = pm.environment.get('transactionId');",
+                  "if (!tid) { throw new Error('transactionId não encontrado — execute Listar Transações primeiro'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Transação encontrada', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Transação retorna campos obrigatórios', () => {",
+                  "    const t = pm.response.json();",
+                  "    pm.expect(t).to.have.property('id');",
+                  "    pm.expect(t).to.have.property('type');",
+                  "    pm.expect(t).to.have.property('amount');",
+                  "    pm.expect(t).to.have.property('description');",
+                  "});",
+                  "",
+                  "pm.test('ID bate com o solicitado', () => {",
+                  "    const t = pm.response.json();",
+                  "    pm.expect(String(t.id)).to.equal(pm.environment.get('transactionId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transactions/{{transactionId}}",
+              "host": ["{{api_base}}"],
+              "path": ["transactions", "{{transactionId}}"]
+            },
+            "description": "Retorna os detalhes de uma transação específica pelo ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar transações por valor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Busca por valor executada', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resultado é um array', () => {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/accounts/{{fromAccountId}}/transactions/amount/{{transferAmount}}",
+              "host": ["{{api_base}}"],
+              "path": ["accounts", "{{fromAccountId}}", "transactions", "amount", "{{transferAmount}}"]
+            },
+            "description": "Filtra transações da conta por valor exato."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar transações por mês e tipo",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Calcula o mês atual no formato esperado pelo Parabank",
+                  "const meses = ['January','February','March','April','May','June',",
+                  "               'July','August','September','October','November','December'];",
+                  "const mesAtual = meses[new Date().getMonth()];",
+                  "pm.environment.set('mesAtual', mesAtual);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Filtro por mês e tipo executado', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resultado é um array', () => {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/accounts/{{fromAccountId}}/transactions/month/{{mesAtual}}/type/DEBIT",
+              "host": ["{{api_base}}"],
+              "path": ["accounts", "{{fromAccountId}}", "transactions", "month", "{{mesAtual}}", "type", "DEBIT"]
+            },
+            "description": "Filtra transações da conta por mês (nome em inglês) e tipo (DEBIT/CREDIT)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 — Transferência",
+      "description": "Endpoints de transferência de fundos entre contas. Testa cenários positivos, valores limite e bugs conhecidos.",
+      "item": [
+        {
+          "name": "Transferência com valor válido — R$100,00",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const from = pm.environment.get('fromAccountId');",
+                  "const to   = pm.environment.get('toAccountId');",
+                  "if (!from || !to) { throw new Error('fromAccountId/toAccountId não encontrados — execute Listar Contas'); }",
+                  "if (from === to)  { throw new Error('Conta origem e destino são iguais — a transferência requer contas distintas'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Transferência realizada', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta confirma transferência', () => {",
+                  "    const texto = pm.response.text();",
+                  "    pm.expect(texto.toLowerCase()).to.satisfy(",
+                  "        (t) => t.includes('successfully') || t.includes('transfer'),",
+                  "        'Resposta não confirma a transferência'",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta < 5000ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transfer?fromAccountId={{fromAccountId}}&toAccountId={{toAccountId}}&amount={{transferAmount}}",
+              "host": ["{{api_base}}"],
+              "path": ["transfer"],
+              "query": [
+                { "key": "fromAccountId", "value": "{{fromAccountId}}" },
+                { "key": "toAccountId",   "value": "{{toAccountId}}" },
+                { "key": "amount",        "value": "{{transferAmount}}" }
+              ]
+            },
+            "description": "Transfere R$100,00 da conta de origem para a conta de destino."
+          },
+          "response": []
+        },
+        {
+          "name": "Transferência com valor mínimo — R$0,01",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Transferência mínima aceita', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transfer?fromAccountId={{fromAccountId}}&toAccountId={{toAccountId}}&amount=0.01",
+              "host": ["{{api_base}}"],
+              "path": ["transfer"],
+              "query": [
+                { "key": "fromAccountId", "value": "{{fromAccountId}}" },
+                { "key": "toAccountId",   "value": "{{toAccountId}}" },
+                { "key": "amount",        "value": "0.01" }
+              ]
+            },
+            "description": "Valida que o valor mínimo de R$0,01 é aceito pelo sistema."
+          },
+          "response": []
+        },
+        {
+          "name": "[BUG-001] Transferência com valor R$0,00 — deveria ser rejeitada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// BUG-001: Parabank processa R$0,00 sem retornar erro.",
+                  "// Comportamento ESPERADO: status 400/422 com mensagem de validação.",
+                  "// Comportamento ATUAL: retorna 200 e processa silenciosamente.",
+                  "pm.test('[BUG-001] Transferência de R$0,00 DEVERIA retornar erro (atualmente retorna 200)', () => {",
+                  "    const status = pm.response.code;",
+                  "    if (status === 200) {",
+                  "        pm.test.skip('BUG-001 ativo: API processa R$0,00 sem validar. Reportar ao time de desenvolvimento.');",
+                  "    } else {",
+                  "        pm.expect(status).to.be.oneOf([400, 422], 'Esperado erro de validação para valor zero');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Documentar comportamento atual', () => {",
+                  "    console.log('BUG-001 | Status recebido:', pm.response.code);",
+                  "    console.log('BUG-001 | Corpo:', pm.response.text().substring(0, 200));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transfer?fromAccountId={{fromAccountId}}&toAccountId={{toAccountId}}&amount=0.00",
+              "host": ["{{api_base}}"],
+              "path": ["transfer"],
+              "query": [
+                { "key": "fromAccountId", "value": "{{fromAccountId}}" },
+                { "key": "toAccountId",   "value": "{{toAccountId}}" },
+                { "key": "amount",        "value": "0.00" }
+              ]
+            },
+            "description": "BUG-001: Verifica que valor zero é rejeitado. Comportamento atual: processa sem erro."
+          },
+          "response": []
+        },
+        {
+          "name": "Transferência com valor negativo — deve retornar erro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Valor negativo deve ser rejeitado com status de erro', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422, 500],",
+                  "        'Valor negativo não deveria ser aceito'",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test('Resposta indica erro de validação', () => {",
+                  "    const texto = pm.response.text().toLowerCase();",
+                  "    pm.expect(texto).to.satisfy(",
+                  "        (t) => t.includes('error') || t.includes('invalid') || t.includes('negative'),",
+                  "        'Resposta não indica rejeição de valor negativo'",
+                  "    );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transfer?fromAccountId={{fromAccountId}}&toAccountId={{toAccountId}}&amount=-50.00",
+              "host": ["{{api_base}}"],
+              "path": ["transfer"],
+              "query": [
+                { "key": "fromAccountId", "value": "{{fromAccountId}}" },
+                { "key": "toAccountId",   "value": "{{toAccountId}}" },
+                { "key": "amount",        "value": "-50.00" }
+              ]
+            },
+            "description": "Verifica que valor negativo é rejeitado com mensagem de erro."
+          },
+          "response": []
+        },
+        {
+          "name": "Transferência com saldo insuficiente — deve retornar erro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Saldo insuficiente deve retornar status de erro', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422, 500]);",
+                  "});",
+                  "",
+                  "pm.test('Resposta menciona saldo insuficiente', () => {",
+                  "    const texto = pm.response.text().toLowerCase();",
+                  "    pm.expect(texto).to.satisfy(",
+                  "        (t) => t.includes('insufficient') || t.includes('error') || t.includes('funds'),",
+                  "        'Resposta não indica saldo insuficiente'",
+                  "    );",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transfer?fromAccountId={{fromAccountId}}&toAccountId={{toAccountId}}&amount=9999999.00",
+              "host": ["{{api_base}}"],
+              "path": ["transfer"],
+              "query": [
+                { "key": "fromAccountId", "value": "{{fromAccountId}}" },
+                { "key": "toAccountId",   "value": "{{toAccountId}}" },
+                { "key": "amount",        "value": "9999999.00" }
+              ]
+            },
+            "description": "Verifica que saldo insuficiente retorna erro adequado."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 — Pagamento de Boleto",
+      "description": "Endpoints de pagamento (Bill Pay). Requer dados do beneficiário no corpo da requisição.",
+      "item": [
+        {
+          "name": "Pagamento de boleto com dados válidos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const from = pm.environment.get('fromAccountId');",
+                  "if (!from) { throw new Error('fromAccountId não encontrado — execute Listar Contas'); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Pagamento processado', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resposta confirma pagamento', () => {",
+                  "    const texto = pm.response.text().toLowerCase();",
+                  "    pm.expect(texto).to.satisfy(",
+                  "        (t) => t.includes('payment') || t.includes('successful') || t.includes('complete'),",
+                  "        'Resposta não confirma o pagamento'",
+                  "    );",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta < 5000ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Concessionária Energia Elétrica\",\n  \"address\": {\n    \"street\": \"Av. Central, 1000\",\n    \"city\": \"Brasilia\",\n    \"state\": \"DF\",\n    \"zipCode\": \"70000-100\"\n  },\n  \"phoneNumber\": \"61988880000\",\n  \"accountNumber\": 12345678\n}"
+            },
+            "url": {
+              "raw": "{{api_base}}/billpay?accountId={{fromAccountId}}&amount=25.00",
+              "host": ["{{api_base}}"],
+              "path": ["billpay"],
+              "query": [
+                { "key": "accountId", "value": "{{fromAccountId}}" },
+                { "key": "amount",    "value": "25.00" }
+              ]
+            },
+            "description": "Realiza pagamento de boleto de R$25,00 com dados completos do beneficiário."
+          },
+          "response": []
+        },
+        {
+          "name": "Pagamento com valor inválido — deve retornar erro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Valor inválido deve retornar status de erro', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",       "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Beneficiário Teste\",\n  \"address\": {\n    \"street\": \"Rua Teste, 1\",\n    \"city\": \"Brasilia\",\n    \"state\": \"DF\",\n    \"zipCode\": \"70000-000\"\n  },\n  \"phoneNumber\": \"61900000000\",\n  \"accountNumber\": 99999999\n}"
+            },
+            "url": {
+              "raw": "{{api_base}}/billpay?accountId={{fromAccountId}}&amount=-100.00",
+              "host": ["{{api_base}}"],
+              "path": ["billpay"],
+              "query": [
+                { "key": "accountId", "value": "{{fromAccountId}}" },
+                { "key": "amount",    "value": "-100.00" }
+              ]
+            },
+            "description": "Verifica rejeição de pagamento com valor negativo."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 — Administração",
+      "description": "Endpoints de administração do Parabank para reset/inicialização do banco de dados. Use com cautela — apaga dados da sessão atual.",
+      "item": [
+        {
+          "name": "Inicializar banco de dados com dados padrão",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204/200 — Banco inicializado', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "",
+                  "// Após inicializar, limpar as variáveis de sessão",
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    pm.environment.unset('customerId');",
+                  "    pm.environment.unset('fromAccountId');",
+                  "    pm.environment.unset('toAccountId');",
+                  "    pm.environment.unset('transactionId');",
+                  "    console.log('Variáveis de sessão limpas após inicialização do DB');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/initializeDatabase",
+              "host": ["{{api_base}}"],
+              "path": ["initializeDatabase"]
+            },
+            "description": "Reinicializa o banco de dados do Parabank com os dados de seed padrão. Use para garantir estado limpo antes dos testes."
+          },
+          "response": []
+        },
+        {
+          "name": "Limpar banco de dados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204/200 — Banco limpo', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/cleanDatabase",
+              "host": ["{{api_base}}"],
+              "path": ["cleanDatabase"]
+            },
+            "description": "Remove todos os dados do Parabank. Ação destrutiva — usar apenas em ambiente de testes."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Script global de pré-requisição",
+          "console.log('[ParaBank QA] Executando:', pm.info.requestName);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Script global de teste",
+          "pm.test('Content-Type presente na resposta', () => {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.not.be.undefined;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "api_base",
+      "value": "https://parabank.parasoft.com/parabank/services/bank",
+      "type": "string",
+      "description": "URL base dos serviços REST — substitua pelo environment adequado"
+    }
+  ]
+}

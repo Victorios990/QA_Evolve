@@ -1,0 +1,59 @@
+{
+  "name": "iGaming — QA Environment",
+  "values": [
+    {
+      "key": "igaming_base_url",
+      "value": "https://igaming-qa.example.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "igaming_user",
+      "value": "player01",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "igaming_pass",
+      "value": "Senha@123",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "igaming_admin_user",
+      "value": "admin_qa",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "igaming_admin_pass",
+      "value": "Admin@Seguro1",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tenant_id",
+      "value": "operadora-a",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "bet_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ]
+}

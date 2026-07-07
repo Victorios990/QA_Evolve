@@ -1,0 +1,560 @@
+{
+  "info": {
+    "name": "iGaming — QA API Collection",
+    "description": "Coleção de testes de API para a plataforma iGaming. Cobre autenticação, carteira (wallet), apostas esportivas, histórico de transações e gerenciamento multi-tenant.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",     "value": "{{igaming_base_url}}" },
+    { "key": "access_token", "value": "" },
+    { "key": "tenant_id",    "value": "operadora-a" }
+  ],
+  "item": [
+    {
+      "name": "01 - Autenticação",
+      "item": [
+        {
+          "name": "Login com credenciais válidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Token retornado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('access_token');",
+                  "    pm.collectionVariables.set('access_token', body.access_token);",
+                  "});",
+                  "pm.test('Content-Type é JSON', () => {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{igaming_user}}\",\n  \"password\": \"{{igaming_pass}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login com credenciais inválidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('Mensagem de erro retornada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "    pm.expect(body.message).to.include('inválidos');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"usuario_invalido\",\n  \"password\": \"senha_errada\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('access_token', '');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/auth/logout",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Carteira (Wallet)",
+      "item": [
+        {
+          "name": "Consultar saldo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Saldo retornado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('balance');",
+                  "    pm.expect(body.balance).to.be.a('number');",
+                  "    pm.expect(body.balance).to.be.at.least(0);",
+                  "});",
+                  "pm.test('Moeda informada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('currency');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/wallet/balance",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        },
+        {
+          "name": "Depósito via PIX — valor válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 ou 201', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "pm.test('Transaction ID retornado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('transaction_id');",
+                  "});",
+                  "pm.test('Novo saldo retornado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('new_balance');",
+                  "    pm.expect(body.new_balance).to.be.a('number');",
+                  "});",
+                  "pm.test('Tempo de resposta < 3000ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/wallet/deposit",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 200.00,\n  \"payment_method\": \"PIX\",\n  \"currency\": \"BRL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Depósito — valor zerado (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Mensagem de erro retornada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "    pm.expect(body.message).to.include('inválido');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/wallet/deposit",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 0,\n  \"payment_method\": \"PIX\",\n  \"currency\": \"BRL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Saque — valor válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Transaction ID retornado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('transaction_id');",
+                  "});",
+                  "pm.test('Novo saldo menor que o anterior', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.new_balance).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/wallet/withdraw",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50.00,\n  \"currency\": \"BRL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Saque — saldo insuficiente (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', () => pm.response.to.have.status(422));",
+                  "pm.test('Código de erro correto', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('error_code');",
+                  "    pm.expect(body.error_code).to.equal('INSUFFICIENT_BALANCE');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/wallet/withdraw",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 999999.00,\n  \"currency\": \"BRL\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Histórico de Transações",
+      "item": [
+        {
+          "name": "Listar transações sem filtro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista de transações retornada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('transactions');",
+                  "    pm.expect(body.transactions).to.be.an('array');",
+                  "});",
+                  "pm.test('Paginação presente', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('total');",
+                  "    pm.expect(body).to.have.property('page');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/transactions?page=1&limit=20",
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        },
+        {
+          "name": "Filtrar por tipo — Depósito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Todas as transações são do tipo Depósito', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.transactions.forEach(t => {",
+                  "        pm.expect(t.type).to.equal('DEPOSIT');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/transactions?type=DEPOSIT",
+              "query": [{ "key": "type", "value": "DEPOSIT" }]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        },
+        {
+          "name": "Filtrar por período de datas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Transações dentro do período', () => {",
+                  "    const body = pm.response.json();",
+                  "    const inicio = new Date('2026-06-01');",
+                  "    const fim    = new Date('2026-06-30');",
+                  "    body.transactions.forEach(t => {",
+                  "        const data = new Date(t.date);",
+                  "        pm.expect(data).to.be.at.least(inicio);",
+                  "        pm.expect(data).to.be.at.most(fim);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/transactions?date_from=2026-06-01&date_to=2026-06-30",
+              "query": [
+                { "key": "date_from", "value": "2026-06-01" },
+                { "key": "date_to",   "value": "2026-06-30" }
+              ]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Sportsbook",
+      "item": [
+        {
+          "name": "Listar eventos disponíveis",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista de eventos retornada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('events');",
+                  "    pm.expect(body.events).to.be.an('array');",
+                  "});",
+                  "pm.test('Cada evento tem odds', () => {",
+                  "    const body = pm.response.json();",
+                  "    body.events.slice(0, 5).forEach(e => {",
+                  "        pm.expect(e).to.have.property('odds');",
+                  "        pm.expect(e.odds).to.be.a('number');",
+                  "        pm.expect(e.odds).to.be.above(1.0);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/sportsbook/events",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        },
+        {
+          "name": "Realizar aposta — valor válido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Bet ID retornado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('bet_id');",
+                  "    pm.collectionVariables.set('bet_id', body.bet_id);",
+                  "});",
+                  "pm.test('Status da aposta é OPEN', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.equal('OPEN');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/api/sportsbook/bets",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"evt_001\",\n  \"amount\": 25.00,\n  \"currency\": \"BRL\",\n  \"selection\": \"HOME_WIN\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancelar aposta aberta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Status da aposta é CANCELLED', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.status).to.equal('CANCELLED');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/api/sportsbook/bets/{{bet_id}}",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Multi-Tenant",
+      "item": [
+        {
+          "name": "Listar tenants disponíveis (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Lista de tenants retornada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('tenants');",
+                  "    pm.expect(body.tenants).to.be.an('array');",
+                  "    pm.expect(body.tenants.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/admin/tenants",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ]
+          }
+        },
+        {
+          "name": "Acesso a tenant sem permissão (negativo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403 Forbidden', () => pm.response.to.have.status(403));",
+                  "pm.test('Mensagem de acesso negado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('error');",
+                  "    pm.expect(body.error).to.include('Acesso negado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/admin/tenants/operadora-b/data",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "operadora-a" }
+            ]
+          }
+        },
+        {
+          "name": "Dados de tenant isolados entre operadoras",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Dados pertencem ao tenant correto', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('tenant_id');",
+                  "    pm.expect(body.tenant_id).to.equal(pm.collectionVariables.get('tenant_id'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/wallet/balance",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Tenant-Id",   "value": "{{tenant_id}}" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

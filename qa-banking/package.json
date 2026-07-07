@@ -1,0 +1,22 @@
+{
+  "name": "qa-banking-igaming-cypress",
+  "version": "1.0.0",
+  "description": "Testes E2E com Cypress para plataforma iGaming",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:smoke": "cypress run --env grep=smoke",
+    "cy:carteira": "cypress run --spec 'cypress/e2e/igaming/carteira.cy.js'",
+    "cy:sportsbook": "cypress run --spec 'cypress/e2e/igaming/sportsbook.cy.js'",
+    "cy:historico": "cypress run --spec 'cypress/e2e/igaming/historico.cy.js'",
+    "cy:multitenant": "cypress run --spec 'cypress/e2e/igaming/multi_tenant.cy.js'",
+    "cy:chrome": "cypress run --browser chrome",
+    "cy:firefox": "cypress run --browser firefox",
+    "cy:edge": "cypress run --browser edge"
+  },
+  "devDependencies": {
+    "@cypress/grep": "^4.1.1",
+    "cypress": "^13.17.0",
+    "cypress-mochawesome-reporter": "^3.8.4"
+  }
+}
