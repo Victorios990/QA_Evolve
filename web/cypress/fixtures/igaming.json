@@ -1,0 +1,30 @@
+{
+  "wallet": {
+    "depositMin": 10,
+    "depositMax": 10000,
+    "withdrawMin": 20,
+    "validAmount": 100,
+    "largeAmount": 50000,
+    "negativeAmount": -50,
+    "zeroAmount": 0
+  },
+  "sportsbook": {
+    "eventName": "Final Champions League",
+    "betAmount": 50,
+    "oddMin": 1.01,
+    "oddMax": 999.99
+  },
+  "casino": {
+    "gameSlot": "Book of Dead",
+    "gameLive": "Live Roulette"
+  },
+  "messages": {
+    "depositSuccess": "Depósito realizado com sucesso",
+    "withdrawSuccess": "Saque realizado com sucesso",
+    "betSuccess": "Aposta registrada com sucesso",
+    "insufficientBalance": "Saldo insuficiente",
+    "minDepositError": "Valor mínimo para depósito",
+    "sessionExpired": "Sessão expirada",
+    "unauthorizedTenant": "Acesso não autorizado"
+  }
+}

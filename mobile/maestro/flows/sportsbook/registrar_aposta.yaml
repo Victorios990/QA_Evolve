@@ -1,0 +1,32 @@
+appId: com.igaming.app
+---
+- launchApp
+- tapOn:
+    id: "btn-login"
+- inputText: "player_tenant_a"
+- tapOn:
+    id: "btn-password"
+- inputText: "Test@1234"
+- tapOn:
+    id: "btn-submit-login"
+- tapOn:
+    id: "nav-sportsbook"
+- assertVisible:
+    id: "search-event"
+- tapOn:
+    id: "search-event"
+- inputText: "Final Champions"
+- tapOn:
+    id: "event-card"
+    index: 0
+- assertVisible:
+    id: "odd-value"
+- tapOn:
+    id: "bet-amount"
+- inputText: "50"
+- assertVisible:
+    id: "potential-win"
+- tapOn:
+    id: "btn-place-bet"
+- assertVisible:
+    text: "Aposta registrada com sucesso"

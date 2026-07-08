@@ -1,0 +1,26 @@
+appId: com.igaming.app
+---
+- launchApp
+- tapOn:
+    id: "btn-login"
+- inputText: "player_tenant_a"
+- tapOn:
+    id: "btn-password"
+- inputText: "Test@1234"
+- tapOn:
+    id: "btn-submit-login"
+- assertVisible:
+    id: "dashboard"
+- tapOn:
+    id: "nav-wallet"
+- tapOn:
+    id: "input-withdraw"
+- inputText: "999999"
+- tapOn:
+    id: "btn-withdraw"
+- tapOn:
+    id: "btn-confirm"
+- assertVisible:
+    text: "Saldo insuficiente"
+- assertNotVisible:
+    text: "Saque realizado com sucesso"

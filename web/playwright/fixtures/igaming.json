@@ -1,0 +1,12 @@
+{
+  "wallet": {
+    "validAmount": 100,
+    "withdrawMin": 20,
+    "depositMin": 10
+  },
+  "messages": {
+    "depositSuccess": "Depósito realizado com sucesso",
+    "withdrawSuccess": "Saque realizado com sucesso",
+    "insufficientBalance": "Saldo insuficiente"
+  }
+}

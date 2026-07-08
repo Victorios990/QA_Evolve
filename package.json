@@ -1,0 +1,28 @@
+{
+  "name": "qa-igaming",
+  "version": "1.0.0",
+  "description": "QA portfolio — iGaming platform: web, mobile (Appium/Maestro/Robot), API e carga",
+  "scripts": {
+    "cy:open": "cypress open --project web/cypress",
+    "cy:run": "cypress run --project web/cypress",
+    "cy:run:mobile": "cypress run --project web/cypress --config viewportWidth=390,viewportHeight=844",
+    "pw:install": "playwright install",
+    "pw:test": "playwright test --config web/playwright/playwright.config.js",
+    "pw:test:mobile": "playwright test --config web/playwright/playwright.config.js --project='Mobile Safari — iPhone 14' --project='Mobile Chrome — Pixel 7'",
+    "pw:report": "playwright show-report reports/playwright",
+    "k6:smoke": "k6 run --env SCENARIO=smoke api/k6/igaming_load.js",
+    "k6:load": "k6 run api/k6/igaming_load.js",
+    "k6:spike": "k6 run --env SCENARIO=spike api/k6/igaming_load.js",
+    "k6:tenant": "k6 run api/k6/multi_tenant_load.js",
+    "maestro:carteira": "maestro test mobile/maestro/flows/carteira/",
+    "maestro:sportsbook": "maestro test mobile/maestro/flows/sportsbook/",
+    "maestro:all": "maestro test mobile/maestro/flows/"
+  },
+  "devDependencies": {
+    "cypress": "^13.0.0",
+    "@cypress/grep": "^4.0.0",
+    "cypress-mochawesome-reporter": "^3.0.0",
+    "@playwright/test": "^1.45.0",
+    "mochawesome": "^7.1.3"
+  }
+}
