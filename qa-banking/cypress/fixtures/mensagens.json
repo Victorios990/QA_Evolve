@@ -1,0 +1,28 @@
+{
+  "wallet": {
+    "depositoSucesso":    "Depósito realizado com sucesso",
+    "saqueSucesso":       "Saque realizado com sucesso",
+    "saldoInsuficiente":  "Saldo insuficiente para esta operação",
+    "limiteDiario":       "Limite diário de saque excedido",
+    "valorInvalido":      "Valor inválido informado"
+  },
+  "sportsbook": {
+    "apostaSucesso":      "Aposta registrada com sucesso",
+    "cancelSucesso":      "Aposta cancelada com sucesso",
+    "saldoInsuficiente":  "Saldo insuficiente para esta operação",
+    "abaixoMinimo":       "Valor abaixo do mínimo permitido para apostas",
+    "acimaMaximo":        "Valor acima do máximo permitido para apostas",
+    "oddsAlteradas":      "As odds foram alteradas",
+    "eventoIndisponivel": "Evento não disponível para apostas"
+  },
+  "historico": {
+    "semResultados":      "Nenhuma transação encontrada",
+    "exportSucesso":      "Exportação concluída com sucesso",
+    "periodoInvalido":    "Período de datas inválido"
+  },
+  "multitenant": {
+    "acessoNegado":       "Acesso negado",
+    "trocaSucesso":       "Tenant alternado com sucesso",
+    "tenantInvalido":     "Você não tem permissão para acessar este tenant"
+  }
+}

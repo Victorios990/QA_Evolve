@@ -1,0 +1,15 @@
+target/
+node_modules/
+allure-results/
+allure-report/
+cypress/screenshots/
+cypress/videos/
+cypress-results/
+*.log
+.DS_Store
+.env
+.env.local
+robot/output/
+robot/log.html
+robot/report.html
+robot/output.xml

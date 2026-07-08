@@ -1,0 +1,41 @@
+{
+  "player": {
+    "username": "player01",
+    "password": "Senha@123"
+  },
+  "admin": {
+    "username": "admin_qa",
+    "password": "Admin@Seguro1"
+  },
+  "tenants": {
+    "A": "operadora-a",
+    "B": "operadora-b"
+  },
+  "wallet": {
+    "depositoValido":      "200.00",
+    "saqueValido":         "50.00",
+    "valorZerado":         "0.00",
+    "valorNegativo":       "-100.00",
+    "acimaDiario":         "50000.00",
+    "metodoPIX":           "PIX",
+    "metodoCartao":        "Cartão de Crédito"
+  },
+  "sportsbook": {
+    "eventoValido":        "Flamengo x Palmeiras",
+    "eventoEncerrado":     "EVENTO_ENCERRADO_QA",
+    "apostaValida":        "25.00",
+    "apostaMinima":        "0.01",
+    "apostaMaxima":        "999999.00"
+  },
+  "historico": {
+    "tipoDeposito":        "Depósito",
+    "tipoSaque":           "Saque",
+    "tipoAposta":          "Aposta",
+    "dataInicio":          "01/06/2026",
+    "dataFim":             "30/06/2026",
+    "dataInicioInvalida":  "30/06/2026",
+    "dataFimInvalida":     "01/06/2026",
+    "valorMinFiltro":      "50.00",
+    "valorMaxFiltro":      "200.00"
+  }
+}
