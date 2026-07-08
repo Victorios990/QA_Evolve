@@ -1,0 +1,31 @@
+appId: com.igaming.app
+---
+- launchApp
+- tapOn:
+    id: "btn-login"
+- inputText: "player_tenant_a"
+  label: "Usuário"
+- tapOn:
+    id: "btn-password"
+- inputText: "Test@1234"
+  label: "Senha"
+- tapOn:
+    id: "btn-submit-login"
+- assertVisible:
+    id: "dashboard"
+- tapOn:
+    id: "nav-wallet"
+- assertVisible:
+    id: "wallet-balance"
+- tapOn:
+    id: "input-deposit"
+- inputText: "100"
+- tapOn:
+    id: "btn-deposit"
+- tapOn:
+    id: "btn-confirm"
+- assertVisible:
+    text: "Depósito realizado com sucesso"
+- assertVisible:
+    id: "wallet-balance"
+    enabled: true

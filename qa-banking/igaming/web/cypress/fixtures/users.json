@@ -1,0 +1,16 @@
+{
+  "operator-a": {
+    "username": "player_tenant_a",
+    "password": "Test@1234",
+    "initialBalance": 1000.00
+  },
+  "operator-b": {
+    "username": "player_tenant_b",
+    "password": "Test@1234",
+    "initialBalance": 500.00
+  },
+  "admin": {
+    "username": "admin_qa",
+    "password": "Admin@9999"
+  }
+}

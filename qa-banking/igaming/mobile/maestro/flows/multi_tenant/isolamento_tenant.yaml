@@ -1,0 +1,31 @@
+appId: com.igaming.app
+---
+# Valida que após login no tenant B, dados do tenant A não são exibidos
+- launchApp
+- tapOn:
+    id: "tenant-select"
+- tapOn:
+    text: "operator-b"
+- tapOn:
+    id: "btn-login"
+- inputText: "player_tenant_b"
+- tapOn:
+    id: "btn-password"
+- inputText: "Test@1234"
+- tapOn:
+    id: "btn-submit-login"
+- assertVisible:
+    id: "tenant-badge"
+- assertVisible:
+    text: "operator-b"
+- assertNotVisible:
+    text: "operator-a"
+- tapOn:
+    id: "nav-wallet"
+- assertVisible:
+    id: "wallet-balance"
+# O histórico não deve conter transações de outro tenant
+- tapOn:
+    id: "nav-history"
+- assertNotVisible:
+    text: "player_tenant_a"
