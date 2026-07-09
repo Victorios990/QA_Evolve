@@ -123,8 +123,7 @@ describe('Apostas Esportivas (Sportsbook)', () => {
     cy.pesquisarEvento(dados.sportsbook.eventoEncerrado);
 
     cy.get(SEL.sportsbook.eventUnavailable)
-      .should('be.visible')
-      .or(cy.get(SEL.sportsbook.errorMsg).should('be.visible'));
+      .should('be.visible');
   });
 
   // ── Mudança de odds ───────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 *** Variables ***
 # ── URLs iGaming ──────────────────────────────────────────────────────────────
-${IGAMING_BASE_URL}         https://igaming-qa.example.com
+${IGAMING_BASE_URL}         http://localhost:3000
 ${IGAMING_WALLET_URL}       ${IGAMING_BASE_URL}/account/wallet
 ${IGAMING_HISTORY_URL}      ${IGAMING_BASE_URL}/account/transactions
 ${IGAMING_SPORTSBOOK_URL}   ${IGAMING_BASE_URL}/sportsbook

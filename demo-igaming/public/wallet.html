@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>iGaming QA Demo — Carteira</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background:#0d1117; color:#e6edf3; }
+    .navbar { background:#161b22 !important; border-bottom:1px solid #30363d; }
+    .card  { background:#161b22; border:1px solid #30363d; }
+    .form-control, .form-select { background:#0d1117; border-color:#30363d; color:#e6edf3; }
+    .form-control:focus, .form-select:focus { background:#0d1117; color:#e6edf3; border-color:#58a6ff; box-shadow:none; }
+    .nav-link { color:#8b949e !important; }
+    .nav-link:hover, .nav-link.active { color:#58a6ff !important; }
+    .balance-box { background:#21262d; border-radius:12px; padding:1.5rem; text-align:center; }
+    .balance-amount { font-size:2.5rem; font-weight:700; color:#58a6ff; }
+    .tab-btn { background:transparent; border:1px solid #30363d; color:#8b949e; padding:.5rem 1.5rem; border-radius:6px; cursor:pointer; }
+    .tab-btn.active { background:#58a6ff; border-color:#58a6ff; color:#fff; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+      <span class="navbar-brand fw-bold text-info">⚡ iGaming QA</span>
+      <div class="d-flex gap-3 align-items-center">
+        <a href="/account/wallet"       class="nav-link active">Carteira</a>
+        <a href="/sportsbook"           class="nav-link">Sportsbook</a>
+        <a href="/account/transactions" class="nav-link">Transações</a>
+        <a href="/admin/tenants"        class="nav-link" id="nav-admin" style="display:none">Admin</a>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width:600px">
+    <!-- Saldo -->
+    <div class="balance-box mb-4">
+      <div class="text-muted small mb-1">Saldo disponível</div>
+      <div class="balance-amount" id="wallet-balance" style="display:none">R$ 0.00</div>
+      <div class="text-muted small" id="available-balance">Disponível: R$ 0.00</div>
+    </div>
+
+    <!-- Alertas -->
+    <div class="alert alert-success d-none" id="msg-success"></div>
+    <div class="alert alert-danger  d-none" id="msg-error"></div>
+
+    <!-- Abas -->
+    <div class="d-flex gap-2 mb-3">
+      <button id="btn-deposit-tab"    class="tab-btn active" onclick="showTab('deposit')">Depósito</button>
+      <button id="btn-withdrawal-tab" class="tab-btn"        onclick="showTab('withdrawal')">Saque</button>
+    </div>
+
+    <!-- Formulário Depósito -->
+    <div class="card p-4" id="tab-deposit">
+      <div class="mb-3">
+        <label class="form-label">Valor (R$)</label>
+        <input type="number" id="deposit-amount" class="form-control" placeholder="0.00" min="0.01" step="0.01">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Método de Pagamento</label>
+        <select id="payment-method" class="form-select">
+          <option value="PIX">PIX</option>
+          <option value="Cartão de Crédito">Cartão de Crédito</option>
+          <option value="Boleto">Boleto</option>
+          <option value="Transferência">Transferência Bancária</option>
+        </select>
+      </div>
+      <button id="btn-deposit" class="btn btn-success w-100 fw-bold">Confirmar Depósito</button>
+    </div>
+
+    <!-- Formulário Saque -->
+    <div class="card p-4 d-none" id="tab-withdrawal">
+      <div class="mb-3">
+        <label class="form-label">Valor (R$)</label>
+        <input type="number" id="withdrawal-amount" class="form-control" placeholder="0.00" min="0.01" step="0.01">
+      </div>
+      <button id="btn-withdrawal" class="btn btn-warning w-100 fw-bold">Confirmar Saque</button>
+    </div>
+  </div>
+
+  <script>
+    const token    = localStorage.getItem('access_token');
+    const role     = localStorage.getItem('user_role');
+    const tenantId = 'operadora-a';
+
+    if (!token) window.location.href = '/login';
+    if (role === 'admin') document.getElementById('nav-admin').style.display = 'inline';
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+
+    function authHeaders() {
+      return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Id': tenantId };
+    }
+
+    function showAlert(type, msg) {
+      const s = document.getElementById('msg-success');
+      const e = document.getElementById('msg-error');
+      s.classList.add('d-none');
+      e.classList.add('d-none');
+      if (type === 'success') { s.textContent = msg; s.classList.remove('d-none'); }
+      else                    { e.textContent = msg; e.classList.remove('d-none'); }
+    }
+
+    function showTab(tab) {
+      document.getElementById('tab-deposit').classList.toggle('d-none',    tab !== 'deposit');
+      document.getElementById('tab-withdrawal').classList.toggle('d-none', tab !== 'withdrawal');
+      document.getElementById('btn-deposit-tab').classList.toggle('active',    tab === 'deposit');
+      document.getElementById('btn-withdrawal-tab').classList.toggle('active', tab === 'withdrawal');
+      document.getElementById('msg-success').classList.add('d-none');
+      document.getElementById('msg-error').classList.add('d-none');
+    }
+
+    function updateBalance(balance) {
+      const val = parseFloat(balance).toFixed(2);
+      document.getElementById('wallet-balance').textContent    = `R$ ${val}`;
+      document.getElementById('available-balance').textContent = `Disponível: R$ ${val}`;
+      document.getElementById('wallet-balance').style.display  = '';
+    }
+
+    async function loadBalance() {
+      const res  = await fetch('/api/wallet/balance', { headers: authHeaders() });
+      const data = await res.json();
+      updateBalance(data.balance);
+    }
+
+    // Depósito — flag inFlight evita duplo envio sem desabilitar o botão antes da resposta
+    let inFlightDeposit = false;
+    document.getElementById('btn-deposit').addEventListener('click', async function() {
+      if (inFlightDeposit) return;
+      inFlightDeposit = true;
+
+      const amount = document.getElementById('deposit-amount').value;
+      const method = document.getElementById('payment-method').value;
+
+      const res  = await fetch('/api/wallet/deposit', {
+        method:  'POST',
+        headers: authHeaders(),
+        body:    JSON.stringify({ amount: parseFloat(amount), payment_method: method, currency: 'BRL' }),
+      });
+      const data = await res.json();
+      inFlightDeposit = false;
+
+      if (res.ok) {
+        updateBalance(data.balance);
+        showAlert('success', 'Depósito realizado com sucesso');
+        this.disabled = true;
+      } else {
+        showAlert('error', data.error || 'Erro ao realizar depósito');
+      }
+    });
+
+    // Saque
+    document.getElementById('btn-withdrawal').addEventListener('click', async function() {
+      const amount = document.getElementById('withdrawal-amount').value;
+
+      this.disabled = true;
+
+      const res  = await fetch('/api/wallet/withdrawal', {
+        method:  'POST',
+        headers: authHeaders(),
+        body:    JSON.stringify({ amount: parseFloat(amount), currency: 'BRL' }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        updateBalance(data.balance);
+        showAlert('success', 'Saque realizado com sucesso');
+      } else {
+        showAlert('error', data.error || 'Erro ao realizar saque');
+      }
+      this.disabled = false;
+    });
+
+    loadBalance();
+  </script>
+</body>
+</html>

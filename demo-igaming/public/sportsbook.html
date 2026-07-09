@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>iGaming QA Demo — Sportsbook</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background:#0d1117; color:#e6edf3; }
+    .navbar { background:#161b22 !important; border-bottom:1px solid #30363d; }
+    .card  { background:#161b22; border:1px solid #30363d; }
+    .form-control { background:#0d1117; border-color:#30363d; color:#e6edf3; }
+    .form-control:focus { background:#0d1117; color:#e6edf3; border-color:#58a6ff; box-shadow:none; }
+    .nav-link { color:#8b949e !important; }
+    .nav-link:hover, .nav-link.active { color:#58a6ff !important; }
+
+    .event-list { display:flex; flex-direction:column; gap:.5rem; }
+
+    .event-item {
+      background:#21262d;
+      border:1px solid #30363d;
+      border-radius:8px;
+      padding:1rem;
+      cursor:pointer;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition: border-color .2s;
+    }
+    .event-item:hover    { border-color:#58a6ff; }
+    .event-item.selected { border-color:#58a6ff; background:#1c2d44; }
+    .event-item.closed   { opacity:.5; cursor:default; }
+
+    .odds-value { font-size:1.2rem; font-weight:700; color:#3fb950; }
+
+    .event-unavailable {
+      color:#f85149;
+      font-size:.85rem;
+      margin-top:.4rem;
+      display:none;
+    }
+
+    .bet-slip {
+      background:#21262d;
+      border:1px solid #58a6ff;
+      border-radius:8px;
+      padding:1.5rem;
+      display:none;
+    }
+
+    .odds-changed-warning {
+      background:#5a3e10;
+      border:1px solid #d29922;
+      color:#d29922;
+      border-radius:6px;
+      padding:.5rem 1rem;
+      margin-bottom:.8rem;
+      display:none;
+    }
+
+    #open-bets-list { display:flex; flex-direction:column; gap:.5rem; }
+    .bet-item { background:#21262d; border:1px solid #30363d; border-radius:8px; padding:1rem; }
+    .bet-status { font-size:.8rem; font-weight:600; color:#3fb950; }
+    .tab-btn { background:transparent; border:1px solid #30363d; color:#8b949e; padding:.4rem 1.2rem; border-radius:6px; cursor:pointer; }
+    .tab-btn.active { background:#58a6ff; border-color:#58a6ff; color:#fff; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container-fluid px-4">
+      <span class="navbar-brand fw-bold text-info">⚡ iGaming QA</span>
+      <div class="d-flex gap-3 align-items-center">
+        <a href="/account/wallet"       class="nav-link">Carteira</a>
+        <a href="/sportsbook"           class="nav-link active">Sportsbook</a>
+        <a href="/account/transactions" class="nav-link">Transações</a>
+        <a href="/admin/tenants"        class="nav-link" id="nav-admin" style="display:none">Admin</a>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4">
+    <div class="row g-4">
+
+      <!-- Coluna esquerda: lista de eventos -->
+      <div class="col-lg-7">
+        <div class="d-flex gap-2 mb-3">
+          <button id="open-bets-tab" class="tab-btn" onclick="showOpenBets()">Apostas Abertas</button>
+        </div>
+
+        <!-- Busca -->
+        <div class="mb-3">
+          <input type="text" id="search-events" class="form-control" placeholder="Buscar evento...">
+        </div>
+
+        <!-- Lista de eventos -->
+        <div class="event-list" id="event-list-container"></div>
+
+        <!-- Apostas abertas (oculto por padrão) -->
+        <div id="open-bets-section" style="display:none">
+          <h6 class="text-muted mb-2">Apostas Abertas</h6>
+          <div id="open-bets-list"></div>
+        </div>
+      </div>
+
+      <!-- Coluna direita: bet slip -->
+      <div class="col-lg-5">
+        <div class="alert alert-success d-none" id="msg-success"></div>
+        <div class="alert alert-danger  d-none" id="msg-error"></div>
+
+        <div class="bet-slip" id="bet-slip-panel">
+          <div class="odds-changed-warning" id="odds-changed-warning">
+            ⚠️ As odds foram alteradas. Verifique antes de apostar.
+          </div>
+          <h6 class="mb-3" id="bet-slip-event-name">—</h6>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted">Odds</span>
+            <span class="odds-value" id="bet-slip-odds">—</span>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Valor da aposta (R$)</label>
+            <input type="number" id="bet-amount" class="form-control" placeholder="25.00" min="1" step="0.01">
+          </div>
+          <div class="d-flex gap-2">
+            <button id="btn-place-bet"  class="btn btn-success  flex-fill fw-bold">Apostar</button>
+            <button id="btn-cancel-bet" class="btn btn-outline-danger" style="display:none">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token    = localStorage.getItem('access_token');
+    const role     = localStorage.getItem('user_role');
+    const tenantId = 'operadora-a';
+
+    if (!token) window.location.href = '/login';
+    if (role === 'admin') document.getElementById('nav-admin').style.display = 'inline';
+
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+
+    function authHeaders() {
+      return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Id': tenantId };
+    }
+
+    function showAlert(type, msg) {
+      const s = document.getElementById('msg-success');
+      const e = document.getElementById('msg-error');
+      s.classList.add('d-none'); e.classList.add('d-none');
+      if (type === 'success') { s.textContent = msg; s.classList.remove('d-none'); }
+      else                    { e.textContent = msg; e.classList.remove('d-none'); }
+    }
+
+    // ── Eventos ───────────────────────────────────────────────────────────────
+
+    let allEvents       = [];
+    let selectedEventId = null;
+    let oddsPoller      = null;
+
+    async function loadEvents(query = '') {
+      const url = query ? `/api/sportsbook/events?q=${encodeURIComponent(query)}` : '/api/sportsbook/events';
+      const res = await fetch(url, { headers: authHeaders() });
+      const { events } = await res.json();
+      allEvents = events;
+      renderEvents(events);
+    }
+
+    function renderEvents(events) {
+      const container = document.getElementById('event-list-container');
+      if (!events.length) {
+        container.innerHTML = '<div class="text-muted">Nenhum evento encontrado.</div>';
+        return;
+      }
+      container.innerHTML = events.map(ev => {
+        const closed   = ev.status === 'CLOSED';
+        const classes  = `event-item${closed ? ' closed' : ''}${selectedEventId === ev.id ? ' selected' : ''}`;
+        const unavail  = closed ? 'style="display:block"' : '';
+        return `
+          <div class="${classes}" data-event-id="${ev.id}" onclick="selectEvent('${ev.id}')">
+            <div>
+              <div class="fw-semibold">${ev.name}</div>
+              <div class="text-muted small">${ev.sport}</div>
+              <div class="event-unavailable" ${unavail}>Evento não disponível para apostas</div>
+            </div>
+            <div class="text-end">
+              <div class="odds-value">${closed ? '—' : ev.odds.toFixed(2)}</div>
+              <div class="text-muted small">${new Date(ev.starts_at).toLocaleDateString('pt-BR')}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function selectEvent(eventId) {
+      const event = allEvents.find(e => e.id === eventId);
+      if (!event || event.status === 'CLOSED') return;
+
+      selectedEventId = eventId;
+      renderEvents(allEvents);
+
+      document.getElementById('bet-slip-event-name').textContent = event.name;
+      document.getElementById('bet-slip-odds').textContent       = event.odds.toFixed(2);
+      document.getElementById('bet-slip-panel').style.display    = 'block';
+      document.getElementById('btn-cancel-bet').style.display    = 'none';
+      document.getElementById('odds-changed-warning').style.display = 'none';
+      document.getElementById('msg-success').classList.add('d-none');
+      document.getElementById('msg-error').classList.add('d-none');
+
+      startOddsPolling(eventId);
+    }
+
+    // Polling de odds — detecta mudança via cy.intercept no SB-09
+    function startOddsPolling(eventId) {
+      if (oddsPoller) clearInterval(oddsPoller);
+      oddsPoller = setInterval(async () => {
+        try {
+          const res  = await fetch(`/api/sportsbook/events/${eventId}`, { headers: authHeaders() });
+          const data = await res.json();
+          if (data.odds_changed) {
+            document.getElementById('odds-changed-warning').style.display = 'block';
+            clearInterval(oddsPoller);
+          }
+        } catch { /* ignora erro de rede */ }
+      }, 500);
+    }
+
+    // ── Busca — filtragem client-side imediata (sem debounce) ─────────────────
+
+    document.getElementById('search-events').addEventListener('input', function () {
+      const q = this.value.trim().toLowerCase();
+      const filtered = q ? allEvents.filter(e => e.name.toLowerCase().includes(q)) : allEvents;
+      renderEvents(filtered);
+    });
+
+    // ── Apostar ───────────────────────────────────────────────────────────────
+
+    document.getElementById('btn-place-bet').addEventListener('click', async function() {
+      const amount = parseFloat(document.getElementById('bet-amount').value);
+      if (!amount || amount <= 0 || !selectedEventId) return;
+
+      // Verifica saldo zerado client-side (suporta cy.intercept de SB-05)
+      // Evita mascarar erro de MAX_BET: só bloqueia quando saldo é exatamente 0
+      const balRes  = await fetch('/api/wallet/balance', { headers: authHeaders() });
+      const balData = await balRes.json();
+      if (balData.balance === 0) {
+        showAlert('error', 'Saldo insuficiente para esta operação');
+        return;
+      }
+
+      const res  = await fetch('/api/sportsbook/bets', {
+        method:  'POST',
+        headers: authHeaders(),
+        body:    JSON.stringify({ event_id: selectedEventId, amount }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showAlert('success', 'Aposta registrada com sucesso');
+        document.getElementById('btn-cancel-bet').dataset.betId = data.bet_id;
+        document.getElementById('btn-cancel-bet').style.display = 'inline-block';
+        document.getElementById('bet-amount').value = '';
+        if (oddsPoller) clearInterval(oddsPoller);
+      } else {
+        showAlert('error', data.error || 'Erro ao registrar aposta');
+      }
+    });
+
+    // ── Cancelar aposta ───────────────────────────────────────────────────────
+
+    document.getElementById('btn-cancel-bet').addEventListener('click', async function() {
+      const betId = this.dataset.betId;
+      if (!betId) return;
+
+      const res  = await fetch(`/api/sportsbook/bets/${betId}`, {
+        method:  'DELETE',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showAlert('success', 'Aposta cancelada com sucesso');
+        this.style.display = 'none';
+      } else {
+        showAlert('error', data.error || 'Erro ao cancelar aposta');
+      }
+    });
+
+    // ── Apostas abertas ───────────────────────────────────────────────────────
+
+    async function showOpenBets() {
+      document.getElementById('open-bets-section').style.display = 'block';
+      document.getElementById('event-list-container').style.display = 'none';
+      document.getElementById('search-events').style.display = 'none';
+
+      const res    = await fetch('/api/sportsbook/bets', { headers: authHeaders() });
+      const { bets } = await res.json();
+      const container = document.getElementById('open-bets-list');
+
+      if (!bets.length) {
+        container.innerHTML = '<div class="text-muted">Nenhuma aposta aberta.</div>';
+        return;
+      }
+
+      container.innerHTML = bets.map(bet => `
+        <div class="bet-item" data-bet-id="${bet.bet_id}">
+          <div class="d-flex justify-content-between">
+            <span class="fw-semibold">${bet.event_id}</span>
+            <span class="bet-status">${bet.status}</span>
+          </div>
+          <div class="text-muted small">R$ ${bet.amount.toFixed(2)} &nbsp;|&nbsp; ${new Date(bet.created_at).toLocaleString('pt-BR')}</div>
+        </div>`).join('');
+    }
+
+    // Inicialização
+    loadEvents();
+  </script>
+</body>
+</html>

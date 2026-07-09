@@ -2,7 +2,7 @@ const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: process.env.CYPRESS_BASE_URL || 'https://igaming-qa.example.com',
+    baseUrl: process.env.CYPRESS_BASE_URL || 'http://localhost:3000',
     specPattern: 'cypress/e2e/**/*.cy.js',
     supportFile: 'cypress/support/e2e.js',
     fixturesFolder: 'cypress/fixtures',
@@ -35,7 +35,7 @@ module.exports = defineConfig({
   },
   env: {
     // Sobrescreva via cypress.env.json (não commitar) ou variáveis de ambiente
-    BASE_URL:       'https://igaming-qa.example.com',
+    BASE_URL:       'http://localhost:3000',
     IGAMING_USER:   'player01',
     IGAMING_PASS:   'Senha@123',
     ADMIN_USER:     'admin_qa',

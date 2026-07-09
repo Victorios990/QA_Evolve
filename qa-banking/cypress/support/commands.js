@@ -38,9 +38,10 @@ Cypress.Commands.add('acessarCarteira', () => {
 });
 
 Cypress.Commands.add('getSaldo', () => {
-  return cy.get(SEL.wallet.balance).invoke('text').then((txt) =>
-    parseFloat(txt.replace(/[^0-9.,]/g, '').replace(',', '.'))
-  );
+  return cy.get(SEL.wallet.balance)
+    .should('be.visible')
+    .invoke('text')
+    .then((txt) => parseFloat(txt.replace(/[^0-9.,]/g, '').replace(',', '.')));
 });
 
 Cypress.Commands.add('realizarDeposito', (valor, metodo = 'PIX') => {
