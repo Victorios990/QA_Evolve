@@ -166,4 +166,68 @@ describe('Histórico de Transações', () => {
       expect(res.body).to.have.property('page').that.eq(1);
     });
   });
+
+  // ── Filtros combinados ────────────────────────────────────────────────────
+
+  it('HT-13 | Filtros combinados: tipo + período retornam apenas depósitos do período', { tags: ['historico', 'positivo'] }, () => {
+    cy.intercept('GET', '/api/transactions*').as('apiTransacoes');
+
+    cy.filtrarPorTipo(dados.historico.tipoDeposito);
+    cy.filtrarPorPeriodo(dados.historico.dataInicio, dados.historico.dataFim);
+    cy.aplicarFiltros();
+
+    cy.wait('@apiTransacoes').then((intercept) => {
+      const url = intercept.request.url;
+      expect(url).to.include('type=');
+      expect(url).to.include('date_from=');
+      expect(url).to.include('date_to=');
+    });
+
+    cy.get(SEL.historico.tableRows).should('have.length.greaterThan', 0);
+    cy.get(SEL.historico.tableRows).each(($row) => {
+      cy.wrap($row).find('td.type').should('contain', dados.historico.tipoDeposito);
+    });
+  });
+
+  it('HT-14 | Filtros combinados: tipo + faixa de valor retornam apenas saques dentro do intervalo', { tags: ['historico', 'positivo'] }, () => {
+    cy.filtrarPorTipo(dados.historico.tipoSaque);
+    cy.filtrarPorValor(dados.historico.valorMinFiltro, dados.historico.valorMaxFiltro);
+    cy.aplicarFiltros();
+
+    cy.get(SEL.historico.tableRows).should('have.length.greaterThan', 0);
+    cy.get(SEL.historico.tableRows).each(($row) => {
+      cy.wrap($row).find('td.type').should('contain', dados.historico.tipoSaque);
+      cy.wrap($row).find('td.amount').invoke('text').then((txt) => {
+        const valor = parseFloat(txt.replace(/[^0-9.,]/g, '').replace(',', '.'));
+        expect(valor).to.be.within(
+          parseFloat(dados.historico.valorMinFiltro),
+          parseFloat(dados.historico.valorMaxFiltro)
+        );
+      });
+    });
+  });
+
+  // ── Export CSV — conteúdo ─────────────────────────────────────────────────
+
+  it('HT-15 | Export CSV contém cabeçalho correto e apenas transações do usuário', { tags: ['historico', 'positivo', 'api'] }, () => {
+    cy.request({
+      method: 'GET',
+      url: `${Cypress.env('BASE_URL')}/api/transactions/export`,
+      headers: { 'X-Tenant-Id': Cypress.env('TENANT_A') },
+    }).then((res) => {
+      expect(res.status).to.eq(200);
+      expect(res.headers['content-type']).to.include('text/csv');
+
+      const linhas = res.body.split('\n').filter(Boolean);
+      expect(linhas[0]).to.eq('id,type,amount,date,status');
+
+      linhas.slice(1).forEach((linha) => {
+        const campos = linha.split(',');
+        expect(campos).to.have.length(5);
+        expect(campos[0]).to.not.be.empty; // id
+        expect(campos[1]).to.be.oneOf(['Depósito', 'Saque', 'Aposta']); // type
+        expect(parseFloat(campos[2])).to.be.greaterThan(0); // amount > 0
+      });
+    });
+  });
 });

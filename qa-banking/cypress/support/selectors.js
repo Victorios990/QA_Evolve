@@ -76,4 +76,9 @@ export const SEL = {
     successMsg:      '.alert-success',
     errorMsg:        '.alert-danger',
   },
+
+  // ── Tema ─────────────────────────────────────────────────────────────────
+  tema: {
+    toggle: '#theme-toggle',
+  },
 };
