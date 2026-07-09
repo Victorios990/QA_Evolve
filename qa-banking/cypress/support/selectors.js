@@ -81,4 +81,21 @@ export const SEL = {
   tema: {
     toggle: '#theme-toggle',
   },
+
+  // ── SpinWheel ─────────────────────────────────────────────────────────────
+  spinwheel: {
+    ticketBalance:    '#ticket-balance',
+    btnSpin:          '#btn-spin',
+    canvas:           '#spinwheel-canvas',
+    resultModal:      '#spin-result-modal',
+    resultPrizeName:  '#result-prize-name',
+    resultPrizeValue: '#result-prize-value',
+    btnRedeem:        '#btn-redeem',
+    goalsSection:     '#goals-section',
+    goalItem:         '.goal-item',
+    goalProgressBar:  '.goal-progress-bar',
+    historySection:   '#history-section',
+    historyTable:     '#history-table',
+    historyRow:       '.history-row',
+  },
 };

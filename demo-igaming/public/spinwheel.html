@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>iGaming QA Demo — SpinWheel</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    :root {
+      --bg-primary:   #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary:  #21262d;
+      --border-color: #30363d;
+      --text-primary: #e6edf3;
+      --text-muted:   #8b949e;
+      --accent:       #58a6ff;
+    }
+    body.light {
+      --bg-primary:   #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary:  #eaeef2;
+      --border-color: #d0d7de;
+      --text-primary: #1f2328;
+      --text-muted:   #656d76;
+      --accent:       #0969da;
+    }
+    body { background: var(--bg-primary); color: var(--text-primary); transition: background .2s, color .2s; }
+    .navbar { background: var(--bg-secondary) !important; border-bottom: 1px solid var(--border-color); }
+    .card   { background: var(--bg-secondary); border: 1px solid var(--border-color); }
+    .nav-link { color: var(--text-muted) !important; }
+    .nav-link:hover, .nav-link.active { color: var(--accent) !important; }
+    .text-muted { color: var(--text-muted) !important; }
+
+    #theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: .2rem .5rem;
+      font-size: .95rem;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    #theme-toggle:hover { border-color: var(--accent); }
+
+    /* ── Ticket badge ─────────────────────────────────────────────────────── */
+    .ticket-badge {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: .3rem .8rem;
+      font-size: .9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .ticket-badge strong { color: var(--accent); font-size: 1.1rem; }
+
+    /* ── Wheel container ──────────────────────────────────────────────────── */
+    .wheel-container {
+      position: relative;
+      display: inline-block;
+      margin: 0 auto;
+    }
+    .wheel-pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left:  14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top:   28px solid var(--accent);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+      z-index: 10;
+    }
+
+    /* ── Spin button ─────────────────────────────────────────────────────── */
+    #btn-spin {
+      min-width: 160px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: .65rem 2rem;
+      transition: opacity .2s, transform .1s;
+      cursor: pointer;
+    }
+    #btn-spin:disabled { opacity: .4; cursor: not-allowed; }
+    #btn-spin:not(:disabled):hover { opacity: .85; transform: scale(1.02); }
+
+    /* ── Goals section ────────────────────────────────────────────────────── */
+    #goals-section { margin-top: 2rem; }
+    .goal-item {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: .9rem 1.1rem;
+      margin-bottom: .7rem;
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+    }
+    .goal-icon { font-size: 1.6rem; min-width: 2rem; text-align: center; }
+    .goal-info { flex: 1; min-width: 0; }
+    .goal-name { font-weight: 600; font-size: .95rem; }
+    .goal-desc { font-size: .8rem; color: var(--text-muted); }
+    .goal-progress-wrap {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      height: 8px;
+      margin-top: .4rem;
+      overflow: hidden;
+    }
+    .goal-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 6px;
+      transition: width .4s;
+    }
+    .goal-badge-done {
+      background: #238636;
+      color: #fff;
+      border-radius: 50%;
+      width: 1.6rem;
+      height: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .85rem;
+      flex-shrink: 0;
+    }
+    .goal-reward { font-size: .78rem; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+
+    /* ── History section ──────────────────────────────────────────────────── */
+    #history-section { margin-top: 2rem; }
+    #history-table { width: 100%; border-collapse: collapse; }
+    #history-table thead th {
+      border-bottom: 1px solid var(--border-color);
+      padding: .5rem .7rem;
+      font-size: .8rem;
+      color: var(--text-muted);
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .history-row td {
+      border-bottom: 1px solid var(--border-color);
+      padding: .55rem .7rem;
+      font-size: .88rem;
+      vertical-align: middle;
+    }
+    .history-row:last-child td { border-bottom: none; }
+    .badge-redeemed   { background:#238636; color:#fff; border-radius:4px; padding:.15rem .5rem; font-size:.75rem; }
+    .badge-pending    { background:#9e6a03; color:#fff; border-radius:4px; padding:.15rem .5rem; font-size:.75rem; }
+
+    /* ── Modal ────────────────────────────────────────────────────────────── */
+    #spin-result-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.72);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+    }
+    #spin-result-modal.show { display: flex; }
+    .modal-inner {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem 2.5rem;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6);
+      animation: popIn .25s ease-out;
+    }
+    @keyframes popIn {
+      from { transform: scale(.85); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .modal-prize-icon   { font-size: 3.5rem; margin-bottom: .5rem; }
+    .modal-prize-name   { font-size: 1.4rem; font-weight: 700; color: var(--accent); margin-bottom: .25rem; }
+    .modal-prize-value  { font-size: 1rem; color: var(--text-muted); margin-bottom: 1.3rem; }
+    #btn-redeem {
+      background: #238636;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .55rem 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: .5rem;
+      transition: opacity .2s;
+    }
+    #btn-redeem:hover   { opacity: .82; }
+    #btn-redeem:disabled { opacity: .4; cursor: not-allowed; }
+    #btn-close-modal {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: .55rem 1.2rem;
+      cursor: pointer;
+    }
+    #btn-close-modal:hover { border-color: var(--accent); color: var(--text-primary); }
+
+    /* ── Misc ─────────────────────────────────────────────────────────────── */
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: .5rem;
+    }
+    .empty-state { color: var(--text-muted); font-size: .9rem; text-align: center; padding: 1.5rem 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ──────────────────────────────────────────────────────────── -->
+  <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container-lg">
+      <button id="theme-toggle" title="Alternar tema">☀️</button>
+      <span class="navbar-brand fw-bold text-info ms-2">⚡ iGaming QA</span>
+      <div class="d-flex gap-3 align-items-center ms-auto flex-wrap">
+        <a href="/account/wallet"       class="nav-link">Carteira</a>
+        <a href="/sportsbook"           class="nav-link">Sportsbook</a>
+        <a href="/account/transactions" class="nav-link">Transações</a>
+        <a href="/spinwheel"            class="nav-link active">SpinWheel</a>
+        <a href="/admin/tenants"        class="nav-link" id="nav-admin" style="display:none">Admin</a>
+        <div class="ticket-badge" title="Seus tickets disponíveis">
+          🎟️ <strong id="ticket-balance">0</strong>
+        </div>
+        <span id="nav-username" style="color:var(--text-muted); font-size:.85rem;"></span>
+        <button onclick="logout()" class="btn btn-sm btn-outline-secondary">Sair</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <div class="container-lg" style="max-width: 900px;">
+
+    <!-- Alerts -->
+    <div class="alert alert-danger d-none mb-3" id="msg-error"></div>
+
+    <!-- Wheel + Spin button -->
+    <div class="text-center mb-2">
+      <div class="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas id="spinwheel-canvas" width="380" height="380"></canvas>
+      </div>
+    </div>
+    <div class="text-center mb-4">
+      <button id="btn-spin" disabled>Girar (1 ticket)</button>
+      <div class="mt-2 small" style="color:var(--text-muted)" id="spin-status"></div>
+    </div>
+
+    <!-- Goals -->
+    <section id="goals-section">
+      <div class="section-title">Metas semanais</div>
+      <div id="goals-list"><div class="empty-state">Carregando metas...</div></div>
+    </section>
+
+    <!-- History -->
+    <section id="history-section">
+      <div class="section-title">Histórico de giros</div>
+      <div style="overflow-x:auto;">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Prêmio</th>
+              <th>Tipo</th>
+              <th>Data</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <tr><td colspan="5" class="empty-state">Carregando histórico...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div><!-- /container -->
+
+  <!-- ── Modal de resultado ───────────────────────────────────────────────── -->
+  <div id="spin-result-modal" role="dialog" aria-modal="true" aria-label="Resultado do giro">
+    <div class="modal-inner">
+      <div class="modal-prize-icon" id="result-prize-icon">🎁</div>
+      <div class="modal-prize-name"  id="result-prize-name">—</div>
+      <div class="modal-prize-value" id="result-prize-value">—</div>
+      <div>
+        <button id="btn-redeem">Resgatar</button>
+        <button id="btn-close-modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Script ───────────────────────────────────────────────────────────── -->
+  <script>
+    // ── Tema ──────────────────────────────────────────────────────────────────
+    function applyTheme(theme) {
+      document.body.classList.toggle('light', theme === 'light');
+      document.getElementById('theme-toggle').textContent = theme === 'light' ? '🌙' : '☀️';
+    }
+    function toggleTheme() {
+      const next = (localStorage.getItem('theme') || 'dark') === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', next);
+      applyTheme(next);
+    }
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    applyTheme(localStorage.getItem('theme') || 'dark');
+
+    // ── Auth guard ────────────────────────────────────────────────────────────
+    const token    = localStorage.getItem('access_token');
+    const username = localStorage.getItem('username') || 'player01';
+    const role     = localStorage.getItem('user_role');
+    const tenantId = 'operadora-a';
+
+    if (!token) { window.location.href = '/login'; }
+    if (role === 'admin') document.getElementById('nav-admin').style.display = 'inline';
+    document.getElementById('nav-username').textContent = username;
+
+    function logout() { localStorage.clear(); window.location.href = '/login'; }
+
+    function authHeaders() {
+      return {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${token}`,
+        'X-Tenant-Id':   tenantId,
+      };
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('msg-error');
+      el.textContent = msg;
+      el.classList.remove('d-none');
+      setTimeout(() => el.classList.add('d-none'), 6000);
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    let prizes         = [];       // prêmios da API (ordem = segmentos do canvas)
+    let ticketBalance  = 0;
+    let spinning       = false;
+    let currentAngle   = 0;        // ângulo atual da roda (radianos)
+    let lastSpinResult = null;     // { spin_id, prize: {...} }
+
+    // ── Canvas ────────────────────────────────────────────────────────────────
+    const canvas  = document.getElementById('spinwheel-canvas');
+    const ctx     = canvas.getContext('2d');
+    const CX      = canvas.width  / 2;
+    const CY      = canvas.height / 2;
+    const RADIUS  = CX - 10;
+
+    function drawWheel(angle) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (prizes.length === 0) return;
+
+      const n     = prizes.length;
+      const slice = (2 * Math.PI) / n;
+
+      prizes.forEach((prize, i) => {
+        const startAngle = angle + i * slice;
+        const endAngle   = startAngle + slice;
+
+        // Segmento
+        ctx.beginPath();
+        ctx.moveTo(CX, CY);
+        ctx.arc(CX, CY, RADIUS, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle   = prize.color || '#444';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.3)';
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+
+        // Ícone + texto
+        ctx.save();
+        const midAngle = startAngle + slice / 2;
+        ctx.translate(CX + Math.cos(midAngle) * RADIUS * 0.62,
+                      CY + Math.sin(midAngle) * RADIUS * 0.62);
+        ctx.rotate(midAngle + Math.PI / 2);
+
+        // Ícone emoji
+        ctx.font       = `${Math.max(14, Math.floor(RADIUS * 0.13))}px serif`;
+        ctx.textAlign  = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle  = '#fff';
+        ctx.shadowColor = 'rgba(0,0,0,.6)';
+        ctx.shadowBlur  = 4;
+        ctx.fillText(prize.icon || '🎁', 0, 0);
+
+        // Nome (truncado)
+        const label = prize.name.length > 14 ? prize.name.slice(0, 13) + '…' : prize.name;
+        ctx.font      = `bold ${Math.max(9, Math.floor(RADIUS * 0.075))}px sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.shadowBlur   = 3;
+        ctx.fillText(label, 0, 3);
+        ctx.restore();
+      });
+
+      // Anel externo
+      ctx.beginPath();
+      ctx.arc(CX, CY, RADIUS, 0, 2 * Math.PI);
+      ctx.strokeStyle = 'rgba(255,255,255,.15)';
+      ctx.lineWidth   = 3;
+      ctx.stroke();
+
+      // Centro
+      ctx.beginPath();
+      ctx.arc(CX, CY, RADIUS * 0.09, 0, 2 * Math.PI);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.3)';
+      ctx.lineWidth   = 2;
+      ctx.stroke();
+    }
+
+    // ── Animação de spin ──────────────────────────────────────────────────────
+    // Calcula o ângulo alvo para que o prize_index fique apontado pelo pointer (topo).
+    // O pointer está em -PI/2 (topo do canvas).
+    // Segmento i começa em: currentAngle + i * slice
+    // Centro do segmento i: currentAngle + i * slice + slice/2
+    // Queremos que o centro do segmento i esteja em -PI/2 após a rotação.
+    // Acrescentamos N voltas completas (mínimo 5) para a animação ser visível.
+
+    function calcTargetAngle(prizeIndex) {
+      const n     = prizes.length;
+      const slice = (2 * Math.PI) / n;
+      const pointer = -Math.PI / 2;
+      // Ângulo base para colocar o centro do segmento no topo
+      let target = pointer - (prizeIndex * slice + slice / 2);
+      // Normalizar para partirmos de currentAngle e avançar positivamente
+      // Garantir pelo menos 5 voltas completas adicionais
+      const minRotation = 5 * 2 * Math.PI;
+      // Calcular quantas voltas precisamos adicionar
+      const diff = ((target - currentAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      return currentAngle + diff + minRotation;
+    }
+
+    function easeOut(t) {
+      // Cúbica: desacelera suavemente
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animateSpin(targetAngle, duration, onComplete) {
+      const startAngle = currentAngle;
+      const startTime  = performance.now();
+
+      function frame(now) {
+        const elapsed = now - startTime;
+        const t       = Math.min(elapsed / duration, 1);
+        currentAngle  = startAngle + (targetAngle - startAngle) * easeOut(t);
+        drawWheel(currentAngle);
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          currentAngle = targetAngle;
+          drawWheel(currentAngle);
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ── Ticket balance ────────────────────────────────────────────────────────
+    function updateTicketBadge(balance) {
+      ticketBalance = balance;
+      document.getElementById('ticket-balance').textContent = balance;
+      const btn = document.getElementById('btn-spin');
+      btn.disabled = (balance < 1 || spinning);
+    }
+
+    // ── Carregamento inicial ──────────────────────────────────────────────────
+    async function loadPrizes() {
+      const res  = await fetch('/api/spinwheel/prizes');
+      const data = await res.json();
+      prizes = data.prizes || [];
+      drawWheel(currentAngle);
+    }
+
+    async function loadTickets() {
+      const res  = await fetch('/api/spinwheel/tickets', { headers: authHeaders() });
+      const data = await res.json();
+      updateTicketBadge(data.balance || 0);
+    }
+
+    async function loadGoals() {
+      const res  = await fetch('/api/spinwheel/goals', { headers: authHeaders() });
+      const data = await res.json();
+      renderGoals(data.goals || []);
+    }
+
+    async function loadHistory() {
+      const res  = await fetch('/api/spinwheel/history?page=1&limit=10', { headers: authHeaders() });
+      const data = await res.json();
+      renderHistory(data.spins || []);
+    }
+
+    // ── Render: metas ─────────────────────────────────────────────────────────
+    function renderGoals(goals) {
+      const container = document.getElementById('goals-list');
+      if (goals.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhuma meta ativa no momento.</div>';
+        return;
+      }
+      container.innerHTML = goals.map(g => {
+        const pct     = parseFloat(g.progress_pct) || 0;
+        const current = parseInt(g.current_value)  || 0;
+        const target  = parseInt(g.target_value)   || 1;
+        const done    = g.completed;
+        return `
+          <div class="goal-item">
+            <div class="goal-icon">${g.icon || '🎯'}</div>
+            <div class="goal-info">
+              <div class="goal-name">${escHtml(g.name)}</div>
+              <div class="goal-desc">${escHtml(g.description || '')}
+                &nbsp;<span style="color:var(--accent)">+${g.tickets_reward} ticket${g.tickets_reward > 1 ? 's' : ''}</span>
+              </div>
+              <div class="goal-progress-wrap">
+                <div class="goal-progress-bar" style="width:${pct}%"></div>
+              </div>
+              <div style="font-size:.78rem; color:var(--text-muted); margin-top:.2rem">${current}/${target}</div>
+            </div>
+            ${done
+              ? '<div class="goal-badge-done" title="Meta concluída">✓</div>'
+              : `<div class="goal-reward">${pct.toFixed(0)}%</div>`
+            }
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── Render: histórico ─────────────────────────────────────────────────────
+    function renderHistory(spins) {
+      const tbody = document.getElementById('history-tbody');
+      if (spins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum giro realizado ainda.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = spins.map(s => {
+        const date    = new Date(s.spun_at).toLocaleString('pt-BR');
+        const badge   = s.redeemed
+          ? '<span class="badge-redeemed">Resgatado</span>'
+          : '<span class="badge-pending">Pendente</span>';
+        return `
+          <tr class="history-row" data-spin-id="${s.id}">
+            <td style="font-size:1.3rem; width:2rem">${s.icon || '🎁'}</td>
+            <td>${escHtml(s.prize_name)}</td>
+            <td style="color:var(--text-muted)">${escHtml(s.prize_type)}</td>
+            <td style="color:var(--text-muted); white-space:nowrap">${date}</td>
+            <td>${badge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ── Spin ──────────────────────────────────────────────────────────────────
+    document.getElementById('btn-spin').addEventListener('click', async function () {
+      if (spinning || ticketBalance < 1) return;
+      spinning = true;
+      this.disabled = true;
+      document.getElementById('spin-status').textContent = 'Girando...';
+
+      let data;
+      try {
+        const res = await fetch('/api/spinwheel/spin', {
+          method:  'POST',
+          headers: authHeaders(),
+          body:    JSON.stringify({}),
+        });
+        data = await res.json();
+        if (!res.ok) {
+          showError(data.error || 'Erro ao girar a roleta');
+          spinning = false;
+          this.disabled = (ticketBalance < 1);
+          document.getElementById('spin-status').textContent = '';
+          return;
+        }
+      } catch {
+        showError('Erro de conexão ao girar a roleta');
+        spinning = false;
+        this.disabled = (ticketBalance < 1);
+        document.getElementById('spin-status').textContent = '';
+        return;
+      }
+
+      lastSpinResult = data;
+      updateTicketBadge(data.ticket_balance);
+
+      // Encontrar índice do prêmio retornado na lista de prizes
+      const prizeIdx = prizes.findIndex(p => p.id === data.prize.id);
+      const idx      = prizeIdx >= 0 ? prizeIdx : 0;
+      const target   = calcTargetAngle(idx);
+
+      animateSpin(target, 4200, () => {
+        spinning = false;
+        document.getElementById('spin-status').textContent = '';
+        // Atualizar botão spin com saldo novo
+        const btn = document.getElementById('btn-spin');
+        btn.disabled = (ticketBalance < 1);
+        // Mostrar modal
+        openResultModal(data.prize, data.spin_id);
+        // Recarregar histórico
+        loadHistory();
+      });
+    });
+
+    // ── Modal de resultado ────────────────────────────────────────────────────
+    function openResultModal(prize, spinId) {
+      document.getElementById('result-prize-icon').textContent  = prize.icon  || '🎁';
+      document.getElementById('result-prize-name').textContent  = prize.name;
+      document.getElementById('result-prize-value').textContent = buildPrizeDesc(prize);
+      const btnRedeem = document.getElementById('btn-redeem');
+      btnRedeem.disabled   = false;
+      btnRedeem.dataset.spinId = spinId;
+      document.getElementById('spin-result-modal').classList.add('show');
+    }
+
+    function closeResultModal() {
+      document.getElementById('spin-result-modal').classList.remove('show');
+    }
+
+    function buildPrizeDesc(prize) {
+      if (prize.type === 'ticket')  return `+${prize.value} ticket(s)`;
+      if (prize.type === 'product') return prize.product_name || prize.name;
+      if (prize.type === 'cash')    return `R$ ${parseFloat(prize.value).toFixed(2)}`;
+      return prize.value || '—';
+    }
+
+    document.getElementById('btn-close-modal').addEventListener('click', closeResultModal);
+
+    document.getElementById('spin-result-modal').addEventListener('click', function (e) {
+      if (e.target === this) closeResultModal();
+    });
+
+    document.getElementById('btn-redeem').addEventListener('click', async function () {
+      const spinId = this.dataset.spinId;
+      this.disabled = true;
+      try {
+        const res  = await fetch(`/api/spinwheel/history/${spinId}/redeem`, {
+          method:  'POST',
+          headers: authHeaders(),
+          body:    JSON.stringify({}),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          closeResultModal();
+          loadHistory();
+        } else {
+          showError(data.error || 'Erro ao resgatar prêmio');
+          this.disabled = false;
+        }
+      } catch {
+        showError('Erro de conexão ao resgatar prêmio');
+        this.disabled = false;
+      }
+    });
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ── Bootstrap ─────────────────────────────────────────────────────────────
+    (async function init() {
+      try {
+        await loadPrizes();
+        await Promise.all([loadTickets(), loadGoals(), loadHistory()]);
+      } catch (err) {
+        showError('Erro ao carregar dados da roleta. Verifique a conexão.');
+        console.error('[SpinWheel] init error:', err);
+      }
+    })();
+  </script>
+</body>
+</html>

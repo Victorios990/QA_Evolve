@@ -390,6 +390,8 @@ describe('Motor RNG — RTP e Integridade de Spins', () => {
     it('RNG-15 | Spin com saldo insuficiente retorna 400 com "Saldo insuficiente"', { tags: ['rng', 'spin', 'negativo', 'api'] }, () => {
       cy.window().then((win) => {
         const token = win.localStorage.getItem('access_token');
+
+        // Parte 1: aposta acima do max_bet deve retornar 400
         cy.request({
           method: 'POST',
           url: `${BASE()}/api/rng/spin`,
@@ -398,42 +400,28 @@ describe('Motor RNG — RTP e Integridade de Spins', () => {
             'X-Tenant-Id': TENANT(),
             'Content-Type': 'application/json',
           },
-          // blackjack tem max_bet = 5000; aposta alta para estourar saldo
           body: { game_id: 'blackjack', bet: 999999.00 },
           failOnStatusCode: false,
         }).then((res) => {
-          // Pode ser 400 (aposta acima do max_bet) ou 400 (saldo insuficiente)
-          // Garante que o servidor nunca retorna 500
-          expect(res.status).to.be.oneOf([400, 200]);
-          if (res.status === 400) {
-            expect(res.body).to.have.property('error');
-          }
+          expect(res.status).to.eq(400);
+          expect(res.body).to.have.property('error');
         });
-      });
 
-      // Testa saldo insuficiente diretamente com aposta dentro dos limites
-      // mas forçando saldo baixo via depósito zerado e saque total não é viável em smoke
-      // — usa aposta válida num contexto onde o saldo foi zerado via mock
-      cy.intercept('POST', '/api/rng/spin', {
-        statusCode: 400,
-        body: { error: 'Saldo insuficiente para esta operação' },
-      }).as('spinSaldoInsuficiente');
-
-      cy.window().then((win) => {
-        const token = win.localStorage.getItem('access_token');
+        // Parte 2: tenant isolado tem balance=0 — qualquer aposta retorna 400 com "Saldo insuficiente"
+        const tenantSemSaldo = `tenant-rng-sem-saldo-${Date.now()}`;
         cy.request({
           method: 'POST',
           url: `${BASE()}/api/rng/spin`,
           headers: {
             Authorization: `Bearer ${token}`,
-            'X-Tenant-Id': TENANT(),
+            'X-Tenant-Id': tenantSemSaldo,
             'Content-Type': 'application/json',
           },
           body: { game_id: 'slot_classic', bet: 10.00 },
           failOnStatusCode: false,
         }).then((res) => {
-          // O intercept garante que esta chamada retorna 400 com a mensagem esperada
           expect(res.status).to.eq(400);
+          expect(res.body).to.have.property('error');
           expect(res.body.error).to.include('Saldo insuficiente');
         });
       });

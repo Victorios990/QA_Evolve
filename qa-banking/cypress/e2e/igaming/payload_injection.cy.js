@@ -351,9 +351,10 @@ describe('Segurança Avançada — Injeção de Payload, Token Forgery e IDOR', 
         body: JSON.stringify({ username: 'player01', password: 'Senha@123' }),
         failOnStatusCode: false,
       }).then((res) => {
-        // O servidor pode aceitar (200) ou rejeitar (400/415), mas nunca deve retornar 500
+        // O servidor pode aceitar (200), rejeitar (400/415) ou retornar 401 quando o corpo
+        // não é parseado (Content-Type desconhecido → req.body indefinido → credenciais ausentes)
         expect(res.status).to.not.eq(500, 'Content-Type incorreto não deve causar erro interno do servidor');
-        expect(res.status).to.be.oneOf([200, 400, 415]);
+        expect(res.status).to.be.oneOf([200, 400, 401, 415]);
       });
     });
 

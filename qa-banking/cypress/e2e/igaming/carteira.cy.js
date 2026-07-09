@@ -5,6 +5,8 @@ describe('Carteira (Wallet)', () => {
   let msgs;
 
   before(() => {
+    // Garante wallet no estado inicial (balance=1000) antes de qualquer teste de carteira
+    cy.request({ method: 'POST', url: '/api/_test/spinwheel-reset' });
     cy.fixture('igaming').then((d)    => { dados = d; });
     cy.fixture('mensagens').then((m)  => { msgs  = m; });
   });
