@@ -62,8 +62,12 @@ public class DriverFactory {
     public static void quitDriver() {
         WebDriver driver = driverThread.get();
         if (driver != null) {
-            driver.quit();
-            driverThread.remove();
+            try {
+                driver.quit();
+            } catch (Exception ignored) {
+            } finally {
+                driverThread.remove();
+            }
         }
     }
 }

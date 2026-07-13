@@ -71,6 +71,27 @@
       "type": "default",
       "enabled": true,
       "description": "Valor padrão de transferência nos testes"
+    },
+    {
+      "key": "fromDate",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Data inicial do período (MM-DD-YYYY) — preenchida automaticamente pelo pre-script"
+    },
+    {
+      "key": "toDate",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Data final do período (MM-DD-YYYY) — preenchida automaticamente pelo pre-script"
+    },
+    {
+      "key": "mesAtual",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Mês atual em inglês (January, February...) — preenchido pelo pre-script"
     }
   ],
   "_postman_variable_scope": "environment",

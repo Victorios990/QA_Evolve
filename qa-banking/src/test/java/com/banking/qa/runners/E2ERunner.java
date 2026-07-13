@@ -12,4 +12,5 @@ import org.junit.platform.suite.api.*;
     "json:target/reports/e2e/report.json," +
     "io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm")
 @ConfigurationParameter(key = "cucumber.filter.tags", value = "not @ignorar")
+@ConfigurationParameter(key = "cucumber.object-factory", value = "io.cucumber.picocontainer.PicoFactory")
 public class E2ERunner {}

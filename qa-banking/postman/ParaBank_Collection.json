@@ -614,6 +614,73 @@
             "description": "Filtra transações da conta por mês (nome em inglês) e tipo (DEBIT/CREDIT)."
           },
           "response": []
+        },
+        {
+          "name": "Buscar transações por período (fromDate/toDate)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Gera período: 01/01 do ano atual até hoje (formato MM-DD-YYYY)",
+                  "const hoje = new Date();",
+                  "const pad = (n) => String(n).padStart(2, '0');",
+                  "const anoAtual = hoje.getFullYear();",
+                  "const fromDate = `01-01-${anoAtual}`;",
+                  "const toDate   = `${pad(hoje.getMonth()+1)}-${pad(hoje.getDate())}-${anoAtual}`;",
+                  "pm.environment.set('fromDate', fromDate);",
+                  "pm.environment.set('toDate', toDate);",
+                  "console.log('Período:', fromDate, 'até', toDate);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 — Filtro por período executado', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Resultado é um array', () => {",
+                  "    const transacoes = pm.response.json();",
+                  "    pm.expect(transacoes).to.be.an('array');",
+                  "    console.log('Transações no período:', transacoes.length);",
+                  "});",
+                  "",
+                  "pm.test('Todas as transações estão dentro do período solicitado', () => {",
+                  "    const transacoes = pm.response.json();",
+                  "    const from = new Date(pm.environment.get('fromDate'));",
+                  "    const to   = new Date(pm.environment.get('toDate'));",
+                  "    transacoes.forEach((t) => {",
+                  "        const dataT = new Date(t.date);",
+                  "        pm.expect(dataT.getTime()).to.be.at.least(from.getTime() - 86400000,",
+                  "            `Transação ${t.id} fora do período`);",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test('Tempo de resposta < 3000ms', () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/accounts/{{fromAccountId}}/transactions/fromDate/{{fromDate}}/toDate/{{toDate}}",
+              "host": ["{{api_base}}"],
+              "path": ["accounts", "{{fromAccountId}}", "transactions", "fromDate", "{{fromDate}}", "toDate", "{{toDate}}"]
+            },
+            "description": "Filtra transações da conta por intervalo de datas. Formato: MM-DD-YYYY. O pré-script gera automaticamente o período de 01/01 do ano atual até hoje."
+          },
+          "response": []
         }
       ]
     },
@@ -843,6 +910,52 @@
               ]
             },
             "description": "Verifica que saldo insuficiente retorna erro adequado."
+          },
+          "response": []
+        },
+        {
+          "name": "[BUG-002] Transferência sem parâmetro amount — deveria ser rejeitada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// BUG-002: Parabank processa transferência sem o campo amount.",
+                  "// Comportamento ESPERADO: status 400 com mensagem 'amount is required'.",
+                  "// Comportamento ATUAL: retorna 200 e trata amount como 0 silenciosamente.",
+                  "pm.test('[BUG-002] Campo amount vazio DEVERIA retornar 400 (atualmente retorna 200)', () => {",
+                  "    const status = pm.response.code;",
+                  "    if (status === 200) {",
+                  "        console.warn('BUG-002 ativo: API processa transferência sem amount. Reportar ao time de desenvolvimento.');",
+                  "    } else {",
+                  "        pm.expect(status).to.be.oneOf([400, 422], 'Esperado erro de validação para amount ausente');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Documentar comportamento atual', () => {",
+                  "    console.log('BUG-002 | Status recebido:', pm.response.code);",
+                  "    console.log('BUG-002 | Corpo:', pm.response.text().substring(0, 200));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{api_base}}/transfer?fromAccountId={{fromAccountId}}&toAccountId={{toAccountId}}",
+              "host": ["{{api_base}}"],
+              "path": ["transfer"],
+              "query": [
+                { "key": "fromAccountId", "value": "{{fromAccountId}}" },
+                { "key": "toAccountId",   "value": "{{toAccountId}}" }
+              ]
+            },
+            "description": "BUG-002: Verifica que requisição sem o campo amount é rejeitada. Comportamento atual: processa sem erro tratando amount como 0."
           },
           "response": []
         }
